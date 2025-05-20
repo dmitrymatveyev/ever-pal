@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  webapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/everpal-87a1f-firebase-adminsdk-fbsvc-b9e9e1659a.json
+      - FIREBASE_API_KEY=${FIREBASE_API_KEY}
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+    volumes:
+      - .:/app
+    command: dotnet watch run --no-launch-profile
