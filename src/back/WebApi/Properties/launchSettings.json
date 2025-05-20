@@ -9,7 +9,7 @@
       "applicationUrl": "https://localhost:7252",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "GOOGLE_APPLICATION_CREDENTIALS": "../../../../everpal-87a1f-firebase-adminsdk-fbsvc-b9e9e1659a.json"
+        "GOOGLE_APPLICATION_CREDENTIALS": "secrets/everpal-87a1f-firebase-adminsdk-fbsvc-b9e9e1659a.json"
       }
     }
   }

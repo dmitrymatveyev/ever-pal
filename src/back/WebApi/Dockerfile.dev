@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+# Install debugger with proper permissions
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        unzip \
+        curl \
+        procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sSL https://aka.ms/getvsdbgsh | /bin/sh /dev/stdin -v latest -l /vsdbg \
+    && chmod +x /vsdbg/vsdbg
+
+COPY . .
+RUN dotnet restore
+RUN dotnet dev-certs https
+RUN dotnet dev-certs https --trust
+
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/everpal-87a1f-firebase-adminsdk-fbsvc-b9e9e1659a.json
+ENV ASPNETCORE_URLS=https://+:443
+
+ENTRYPOINT ["dotnet", "run", "--no-launch-profile"]
