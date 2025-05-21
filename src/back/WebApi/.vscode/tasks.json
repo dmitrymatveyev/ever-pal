@@ -2,7 +2,8 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "docker-debug",
+            "label": "docker-up",
+            "type": "process",
             "command": "docker",
             "args": [
                 "compose",
@@ -11,12 +12,11 @@
                 "up",
                 "--build"
             ],
-            "type": "process",
             "isBackground": true,
             "problemMatcher": {
                 "pattern": [
                     {
-                        "regexp": ".",
+                        "regexp": "^.*Now listening on:.*$",
                         "file": 1,
                         "location": 2,
                         "message": 3
@@ -24,106 +24,21 @@
                 ],
                 "background": {
                     "activeOnStart": true,
-                    "beginsPattern": ".",
-                    "endsPattern": "."
+                    "beginsPattern": "^.*Building.*$",
+                    "endsPattern": "^.*Now listening on:.*$"
                 }
             }
         },
         {
-            "label": "build",
-            "command": "dotnet",
+            "label": "docker-down",
             "type": "process",
+            "command": "docker",
             "args": [
-                "build",
-                "${workspaceFolder}/WebApi.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/WebApi.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/WebApi.sln"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "type": "docker-build",
-            "label": "docker-build: debug",
-            "dependsOn": [
-                "build"
-            ],
-            "dockerBuild": {
-                "tag": "webapi:dev",
-                "target": "base",
-                "dockerfile": "${workspaceFolder}/Dockerfile",
-                "context": "${workspaceFolder}",
-                "pull": true
-            },
-            "netCore": {
-                "appProject": "${workspaceFolder}/WebApi.csproj"
-            }
-        },
-        {
-            "type": "docker-build",
-            "label": "docker-build: release",
-            "dependsOn": [
-                "build"
-            ],
-            "dockerBuild": {
-                "tag": "webapi:latest",
-                "dockerfile": "${workspaceFolder}/Dockerfile",
-                "context": "${workspaceFolder}",
-                "platform": {
-                    "os": "linux",
-                    "architecture": "amd64"
-                },
-                "pull": true
-            },
-            "netCore": {
-                "appProject": "${workspaceFolder}/WebApi.csproj"
-            }
-        },
-        {
-            "type": "docker-run",
-            "label": "docker-run: debug",
-            "dependsOn": [
-                "docker-build: debug"
-            ],
-            "dockerRun": {},
-            "netCore": {
-                "appProject": "${workspaceFolder}/WebApi.csproj",
-                "enableDebugging": true
-            }
-        },
-        {
-            "type": "docker-run",
-            "label": "docker-run: release",
-            "dependsOn": [
-                "docker-build: release"
-            ],
-            "dockerRun": {},
-            "netCore": {
-                "appProject": "${workspaceFolder}/WebApi.csproj"
-            }
+                "compose",
+                "-f",
+                "docker-compose.debug.yml",
+                "down"
+            ]
         }
     ]
 }
