@@ -2,9 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Docker .NET Debug",
+            "name": "Local Debug",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/WebApi.csproj"
+        },
+        {
+            "name": "Docker Debug",
             "type": "coreclr",
             "request": "attach",
+            "preLaunchTask": "docker-up",
+            "postDebugTask": "docker-down",
             "processId": "${command:pickRemoteProcess}",
             "pipeTransport": {
                 "pipeProgram": "docker",
