@@ -5,7 +5,7 @@ namespace EverPal.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // This attribute requires authentication
+    [Authorize]
     public class MainController : ControllerBase
     {
         [HttpGet]
