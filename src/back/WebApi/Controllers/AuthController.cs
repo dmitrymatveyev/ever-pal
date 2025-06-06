@@ -9,11 +9,16 @@ namespace EverPal.WebApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IFirebaseAuthService _firebaseAuthService;
+        private readonly IAnonymousAuthService _anonymousAuthService;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IFirebaseAuthService firebaseAuthService, ILogger<AuthController> logger)
+        public AuthController(
+            IFirebaseAuthService firebaseAuthService,
+            IAnonymousAuthService anonymousAuthService,
+            ILogger<AuthController> logger)
         {
             _firebaseAuthService = firebaseAuthService;
+            _anonymousAuthService = anonymousAuthService;
             _logger = logger;
         }
 
@@ -44,6 +49,21 @@ namespace EverPal.WebApi.Controllers
             {
                 _logger.LogError(ex, "Error during login");
                 return BadRequest(new { message = "Authentication failed", error = ex.Message });
+            }
+        }
+
+        [HttpPost("anonymous")]
+        public async Task<ActionResult<AuthResponse>> Anonymous()
+        {
+            try
+            {
+                var result = await _anonymousAuthService.CreateAnonymousUserAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during anonymous authentication");
+                return BadRequest(new { message = "Anonymous authentication failed", error = ex.Message });
             }
         }
     }
