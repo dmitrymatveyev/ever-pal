@@ -19,6 +19,6 @@ RUN dotnet dev-certs https --trust
 
 ENV ASPNETCORE_ENVIRONMENT=Development
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/everpal-87a1f-firebase-adminsdk-fbsvc-b9e9e1659a.json
-ENV ASPNETCORE_URLS=https://+:443
+ENV ASPNETCORE_URLS=https://+:5001
 
 ENTRYPOINT ["dotnet", "run", "--no-launch-profile"]

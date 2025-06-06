@@ -13,8 +13,11 @@ builder.Services.AddSwaggerGen();
 // Add HttpClient for Firebase Auth API
 builder.Services.AddHttpClient<IFirebaseAuthService, FirebaseAuthService>();
 
+// Register the Anonymous Auth Service
+builder.Services.AddSingleton<IAnonymousAuthService, AnonymousAuthService>();
+
 // Register the Firebase Auth Service
-builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
+builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -55,6 +58,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors();
 app.UseFirebaseAuth();
+app.UseAnonymousAuth();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
