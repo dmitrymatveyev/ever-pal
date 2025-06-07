@@ -34,6 +34,10 @@ namespace EverPal.WebApi.Services
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var idToken = responseContent.GetProperty("idToken").GetString();
+
+            // Send email verification
+            await SendEmailVerification(idToken);
 
             // After signup, update the user profile to add display name
             if (!string.IsNullOrEmpty(request.DisplayName))
@@ -80,9 +84,12 @@ namespace EverPal.WebApi.Services
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadFromJsonAsync<JsonElement>();
-
-            // Get additional user info
+            
             var userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(request.Email);
+            if (!userRecord.EmailVerified)
+            {
+                throw new InvalidOperationException("Email not verified. Please verify your email before logging in.");
+            }
 
             using var connection = new NpgsqlConnection(_connectionString);
             var sql = @"
@@ -116,6 +123,19 @@ namespace EverPal.WebApi.Services
             });
 
             var response = await _httpClient.PostAsync(updateProfileEndpoint, content);
+            response.EnsureSuccessStatusCode();
+        }
+
+        private async Task SendEmailVerification(string idToken)
+        {
+            var verifyEndpoint = $"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={_firebaseApiKey}";
+            var content = JsonContent.Create(new
+            {
+                requestType = "VERIFY_EMAIL",
+                idToken = idToken
+            });
+
+            var response = await _httpClient.PostAsync(verifyEndpoint, content);
             response.EnsureSuccessStatusCode();
         }
     }
