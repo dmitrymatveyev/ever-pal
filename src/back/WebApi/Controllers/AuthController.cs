@@ -45,6 +45,10 @@ namespace EverPal.WebApi.Controllers
                 var result = await _firebaseAuthService.LoginAsync(request);
                 return Ok(result);
             }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Email not verified"))
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during login");
