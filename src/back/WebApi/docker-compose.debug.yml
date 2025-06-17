@@ -11,7 +11,7 @@ services:
       - ASPNETCORE_URLS=https://+:5001
       - ASPNETCORE_HTTPS_PORT=5001
       - ASPNETCORE_ENVIRONMENT=Development
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/everpal-87a1f-firebase-adminsdk-fbsvc-b9e9e1659a.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/ever-pal-firebase-adminsdk-fbsvc.json
       - FIREBASE_API_KEY=${FIREBASE_API_KEY}
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=${Development_SSL_Certificate_Password}
