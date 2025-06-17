@@ -16,7 +16,7 @@ COPY . .
 RUN dotnet restore
 
 ENV ASPNETCORE_ENVIRONMENT=Development
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/everpal-87a1f-firebase-adminsdk-fbsvc-b9e9e1659a.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/ever-pal-firebase-adminsdk-fbsvc.json
 ENV ASPNETCORE_URLS=https://+:5001
 
 ENTRYPOINT ["dotnet", "run", "--no-launch-profile"]
