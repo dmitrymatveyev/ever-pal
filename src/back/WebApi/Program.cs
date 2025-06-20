@@ -69,6 +69,9 @@ builder.Services.AddSingleton<IAnonymousAuthService, AnonymousAuthService>();
 // Register the Firebase Auth Service
 builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
 
+// Register the Pet Service
+builder.Services.AddSingleton<IPetService, PetService>();
+
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
