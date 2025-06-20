@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using EverPal.WebApi.Services;
+using Dapper;
+using Npgsql;
 
 namespace EverPal.WebApi.Middlewares
 {
@@ -7,11 +9,13 @@ namespace EverPal.WebApi.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly IAnonymousAuthService _anonymousAuthService;
+        private readonly IConfiguration _configuration;
 
-        public AnonymousAuthMiddleware(RequestDelegate next, IAnonymousAuthService anonymousAuthService)
+        public AnonymousAuthMiddleware(RequestDelegate next, IAnonymousAuthService anonymousAuthService, IConfiguration configuration)
         {
             _next = next;
             _anonymousAuthService = anonymousAuthService;
+            _configuration = configuration;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -22,7 +26,7 @@ namespace EverPal.WebApi.Middlewares
                 return;
             }
 
-            string authHeader = context.Request.Headers["Authorization"];
+            string? authHeader = context.Request.Headers["Authorization"];
             
             if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Anonymous "))
             {
@@ -30,9 +34,18 @@ namespace EverPal.WebApi.Middlewares
                 
                 if (await _anonymousAuthService.ValidateAnonymousTokenAsync(token))
                 {
+                    // Get database user ID
+                    using var connection = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                    await connection.OpenAsync();
+                    var userId = await connection.QuerySingleAsync<Guid>(
+                        "SELECT id FROM users WHERE anonymous_token = @Token", 
+                        new { Token = token });
+                    
                     var claims = new List<Claim>
                     {
-                        new Claim("anonymous_token", token)
+                        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                        new Claim("anonymous_token", token),
+                        new Claim("user_id", userId.ToString())
                     };
                     
                     context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Anonymous"));
