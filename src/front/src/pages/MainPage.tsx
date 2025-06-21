@@ -89,7 +89,8 @@ const MainPage = () => {
               position: 'absolute',
               top: '100%',
               left: '0',
-              backgroundColor: 'white',
+              backgroundColor: '#f9f9f9',
+              color: '#213547',
               border: '1px solid #ddd',
               borderRadius: '5px',
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
@@ -112,11 +113,11 @@ const MainPage = () => {
                         key={pet.id} 
                         style={{
                           padding: '8px 12px',
-                          borderBottom: '1px solid #eee',
+                          borderBottom: '1px solid #ddd',
                           fontSize: '14px',
                           cursor: 'pointer'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
                         {pet.name}
