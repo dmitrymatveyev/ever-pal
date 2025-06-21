@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainPage from './pages/MainPage';
+import PetProfile from './pages/PetProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -12,6 +13,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MainPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/pet/:petId" 
+          element={
+            <ProtectedRoute>
+              <PetProfile />
             </ProtectedRoute>
           } 
         />
