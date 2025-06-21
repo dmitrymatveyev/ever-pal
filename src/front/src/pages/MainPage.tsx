@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMainData } from '../services/authService';
 import { getPets, type Pet } from '../services/petService';
 
 interface UserData {
@@ -9,53 +8,24 @@ interface UserData {
   token?: string;
 }
 
-interface MainData {
-  message: string;
-  userId: string;
-  email: string;
-}
-
 const MainPage = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [mainData, setMainData] = useState<MainData | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [showPets, setShowPets] = useState(false);
   const [loadingPets, setLoadingPets] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
     const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      // If not logged in, redirect to login
-      navigate('/login');
-      return;
-    }
-    
-    try {
-      const user = JSON.parse(userStr);
-      setUserData(user);
-    } catch (e) {
-      // If invalid data, redirect to login
-      localStorage.removeItem('user');
-      navigate('/login');
-    }
-  }, [navigate]);
-
-  useEffect(() => {
-    const fetchMainData = async (token: string) => {
+    if (userStr) {
       try {
-        const data = await getMainData(token);
-        setMainData(data);
-      } catch (error) {
-        console.error('Failed to fetch main data:', error);
+        const user = JSON.parse(userStr);
+        setUserData(user);
+      } catch (e) {
+        console.error('Failed to parse user data:', e);
       }
-    };
-
-    if (userData?.token) {
-      fetchMainData(userData.token);
     }
-  }, [userData?.token]);
+  }, []);
 
   const handleTogglePets = async () => {
     if (!showPets && pets.length === 0 && userData?.token) {
@@ -73,13 +43,13 @@ const MainPage = () => {
   };
 
   const handleLogout = () => {
-    // Remove user data and redirect to login
+    // Remove user data and redirect to main
     localStorage.removeItem('user');
-    navigate('/login');
+    navigate('/main');
   };
 
   if (!userData) {
-    return <div>Loading...</div>;
+    return <div>Loading user data...</div>;
   }
 
   return (
@@ -89,14 +59,6 @@ const MainPage = () => {
         <p>You are browsing anonymously</p>
       ) : (
         <p>You are logged in with email: {userData.email}</p>
-      )}
-      
-      {mainData && (
-        <div>
-          <h2>Main Data:</h2>
-          <p>{mainData.message}</p>
-          <p>User ID: {mainData.userId}</p>
-        </div>
       )}
 
       <div style={{ marginTop: '30px' }}>
@@ -184,12 +146,6 @@ const MainPage = () => {
           Logout
         </button>
       </div>
-      
-      {userData.isAnonymous && (
-        <p style={{ marginTop: '20px', fontStyle: 'italic' }}>
-          Login functionality temporarily disabled while implementing anonymous auth
-        </p>
-      )}
     </div>
   );
 };
