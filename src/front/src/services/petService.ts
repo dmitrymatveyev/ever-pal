@@ -70,9 +70,9 @@ export const createPet = async (
 };
 
 export const updatePet = async (
-  token: string,
   petId: string,
   petData: UpdatePetRequest,
+  token: string,
   isAnonymous: boolean = false
 ): Promise<Pet> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
