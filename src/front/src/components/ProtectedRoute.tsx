@@ -1,5 +1,4 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { getAnonymousAuth } from '../services/authService';
 
 interface ProtectedRouteProps {
@@ -7,7 +6,6 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {

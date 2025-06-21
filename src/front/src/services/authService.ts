@@ -17,17 +17,3 @@ export const getAnonymousAuth = async (): Promise<AuthResponse> => {
   
   return response.json();
 };
-
-export const getMainData = async (token: string) => {
-  const response = await fetch('https://localhost:5001/api/main', {
-    headers: {
-      'Authorization': `Anonymous ${token}`
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch main data');
-  }
-  
-  return response.json();
-};
