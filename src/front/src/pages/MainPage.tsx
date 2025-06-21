@@ -144,36 +144,20 @@ const MainPage = () => {
                 ) : pets.length === 0 ? (
                   <p style={{ margin: '0' }}>No pets found. Add your first pet!</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {pets.map((pet) => (
                       <div 
                         key={pet.id} 
                         style={{
-                          border: '1px solid #eee',
-                          borderRadius: '5px',
-                          padding: '10px',
-                          backgroundColor: '#f9f9f9'
+                          padding: '8px 12px',
+                          borderBottom: '1px solid #eee',
+                          fontSize: '14px',
+                          cursor: 'pointer'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
-                        <h4 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>{pet.name}</h4>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                          {pet.breed && <div><strong>Breed:</strong> {pet.breed}</div>}
-                          {pet.age && <div><strong>Age:</strong> {pet.age} years</div>}
-                          {pet.weight && <div><strong>Weight:</strong> {pet.weight} kg</div>}
-                        </div>
-                        {pet.photoUrl && (
-                          <img 
-                            src={pet.photoUrl} 
-                            alt={pet.name}
-                            style={{ 
-                              width: '60px', 
-                              height: '60px', 
-                              borderRadius: '5px',
-                              marginTop: '8px',
-                              objectFit: 'cover'
-                            }}
-                          />
-                        )}
+                        {pet.name}
                       </div>
                     ))}
                   </div>
