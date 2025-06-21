@@ -23,6 +23,7 @@ namespace EverPal.WebApi.Controllers
         }
 
         [HttpPost("signup")]
+        [NonAction]
         public async Task<ActionResult<AuthResponse>> SignUp([FromBody] SignUpRequest request)
         {
             try
@@ -38,6 +39,7 @@ namespace EverPal.WebApi.Controllers
         }
 
         [HttpPost("login")]
+        [NonAction]
         public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
         {
             try
