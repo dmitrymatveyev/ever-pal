@@ -119,6 +119,10 @@ const MainPage = () => {
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        onClick={() => {
+                          setShowPets(false);
+                          navigate(`/pet/${pet.id}`);
+                        }}
                       >
                         {pet.name}
                       </div>
