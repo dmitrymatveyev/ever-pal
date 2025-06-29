@@ -19,14 +19,6 @@ CREATE TABLE pets (
 
 CREATE INDEX idx_pets_owner_id ON pets(owner_id);
 
-CREATE OR REPLACE FUNCTION update_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC');
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE TRIGGER pets_update_timestamp 
     BEFORE UPDATE ON pets 
     FOR EACH ROW 
