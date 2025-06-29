@@ -11,7 +11,6 @@ import {
   Grid,
   Card,
   CardMedia,
-  CardContent,
   ButtonGroup
 } from '@mui/material';
 import { ArrowBack, Edit, Save, Cancel } from '@mui/icons-material';
@@ -163,7 +162,7 @@ const PetProfile = () => {
         Back
       </Button>
 
-      <Paper elevation={3} sx={{ p: 3 }}>
+      <Paper sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           {isEditing ? (
             <TextField
@@ -171,9 +170,10 @@ const PetProfile = () => {
               onChange={(e) => handleFormChange('name', e.target.value)}
               variant="outlined"
               size="small"
-              sx={{ flexGrow: 1, mr: 2 }}
-              InputProps={{
-                sx: { fontSize: '2rem', fontWeight: 'bold' }
+              sx={{ 
+                flexGrow: 1, 
+                mr: 2,
+                '& .MuiInputBase-input': { fontSize: '2rem', fontWeight: 'bold' }
               }}
             />
           ) : (
@@ -220,7 +220,6 @@ const PetProfile = () => {
               height="300"
               image={pet.photoUrl}
               alt={pet.name}
-              sx={{ objectFit: 'cover' }}
             />
           </Card>
         )}
@@ -235,7 +234,6 @@ const PetProfile = () => {
                 value={editForm.breed}
                 onChange={(e) => handleFormChange('breed', e.target.value)}
                 placeholder="Enter breed"
-                variant="outlined"
                 size="small"
                 fullWidth
               />
@@ -256,7 +254,6 @@ const PetProfile = () => {
                 value={editForm.age}
                 onChange={(e) => handleFormChange('age', e.target.value)}
                 placeholder="Enter age"
-                variant="outlined"
                 size="small"
                 fullWidth
                 inputProps={{ min: 0 }}
@@ -278,7 +275,6 @@ const PetProfile = () => {
                 value={editForm.weight}
                 onChange={(e) => handleFormChange('weight', e.target.value)}
                 placeholder="Enter weight"
-                variant="outlined"
                 size="small"
                 fullWidth
                 inputProps={{ min: 0, step: 0.1 }}

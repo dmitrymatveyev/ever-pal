@@ -4,7 +4,6 @@ import {
   Typography, 
   Button, 
   Box, 
-  Paper, 
   Menu, 
   MenuItem, 
   CircularProgress,
@@ -97,7 +96,6 @@ const MainPage = () => {
           startIcon={<Pets />}
           endIcon={open ? <ExpandLess /> : <ExpandMore />}
           onClick={handleTogglePets}
-          sx={{ mb: 2 }}
         >
           My Pets
         </Button>
@@ -106,16 +104,14 @@ const MainPage = () => {
           anchorEl={anchorEl}
           open={open}
           onClose={handleClose}
-          PaperProps={{
-            sx: {
-              minWidth: 300,
-              maxWidth: 500,
-              maxHeight: 400,
+          slotProps={{
+            paper: {
+              sx: { minWidth: 300, maxWidth: 500, maxHeight: 400 }
             }
           }}
         >
           {loadingPets ? (
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ p: 2, textAlign: 'center' }}>
               <CircularProgress size={24} />
             </Box>
           ) : pets.length === 0 ? (
