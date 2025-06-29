@@ -1,5 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Typography,
+  Button,
+  Box,
+  Paper,
+  TextField,
+  CircularProgress,
+  Alert,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  ButtonGroup
+} from '@mui/material';
+import { ArrowBack, Edit, Save, Cancel } from '@mui/icons-material';
 import { getPets, updatePet, type Pet } from '../services/petService';
 
 interface UserData {
@@ -58,7 +73,7 @@ const PetProfile = () => {
   }, [petId]);
 
   const handleBack = () => {
-    navigate(-1); // Go back to previous page
+    navigate(-1);
   };
 
   const handleEdit = () => {
@@ -115,240 +130,188 @@ const PetProfile = () => {
 
   if (loading) {
     return (
-      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-        <div>Loading pet information...</div>
-      </div>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error || !pet) {
     return (
-      <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-        <button 
+      <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+        <Button 
+          startIcon={<ArrowBack />}
           onClick={handleBack}
-          style={{
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            marginBottom: '20px'
-          }}
+          sx={{ mb: 2 }}
         >
-          ← Back
-        </button>
-        <div style={{ color: '#dc3545' }}>{error || 'Pet not found'}</div>
-      </div>
+          Back
+        </Button>
+        <Alert severity="error">
+          {error || 'Pet not found'}
+        </Alert>
+      </Box>
     );
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <button 
+    <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+      <Button 
+        startIcon={<ArrowBack />}
         onClick={handleBack}
-        style={{
-          backgroundColor: '#6c757d',
-          color: 'white',
-          border: 'none',
-          padding: '8px 16px',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginBottom: '20px'
-        }}
+        sx={{ mb: 3 }}
       >
-        ← Back
-      </button>
+        Back
+      </Button>
 
-      <div style={{
-        border: '1px solid var(--border-color)',
-        borderRadius: '8px',
-        padding: '24px',
-        backgroundColor: 'var(--card-bg)',
-        color: 'var(--text-color)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           {isEditing ? (
-            <input
-              type="text"
+            <TextField
               value={editForm.name}
               onChange={(e) => handleFormChange('name', e.target.value)}
-              style={{
-                fontSize: '2rem',
-                fontWeight: 'bold',
-                border: '2px solid #007bff',
-                borderRadius: '4px',
-                padding: '4px 8px',
-                backgroundColor: 'var(--card-bg)',
-                color: 'var(--text-color)',
-                width: '300px'
+              variant="outlined"
+              size="small"
+              sx={{ flexGrow: 1, mr: 2 }}
+              InputProps={{
+                sx: { fontSize: '2rem', fontWeight: 'bold' }
               }}
             />
           ) : (
-            <h1 style={{ margin: '0' }}>{pet.name}</h1>
+            <Typography variant="h3" component="h1">
+              {pet.name}
+            </Typography>
           )}
           
           {!isEditing ? (
-            <button 
+            <Button 
+              variant="contained"
+              startIcon={<Edit />}
               onClick={handleEdit}
-              style={{
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
             >
               Edit
-            </button>
+            </Button>
           ) : (
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button 
+            <ButtonGroup>
+              <Button 
+                variant="contained"
+                color="success"
+                startIcon={<Save />}
                 onClick={handleSave}
                 disabled={saving}
-                style={{
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.6 : 1
-                }}
               >
                 {saving ? 'Saving...' : 'Save'}
-              </button>
-              <button 
+              </Button>
+              <Button 
+                variant="outlined"
+                startIcon={<Cancel />}
                 onClick={handleCancelEdit}
                 disabled={saving}
-                style={{
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.6 : 1
-                }}
               >
                 Cancel
-              </button>
-            </div>
+              </Button>
+            </ButtonGroup>
           )}
-        </div>
+        </Box>
         
         {pet.photoUrl && (
-          <div style={{ marginBottom: '20px' }}>
-            <img 
-              src={pet.photoUrl} 
+          <Card sx={{ mb: 3, maxWidth: 300 }}>
+            <CardMedia
+              component="img"
+              height="300"
+              image={pet.photoUrl}
               alt={pet.name}
-              style={{ 
-                maxWidth: '300px', 
-                maxHeight: '300px', 
-                borderRadius: '8px',
-                objectFit: 'cover',
-                display: 'block'
-              }}
+              sx={{ objectFit: 'cover' }}
             />
-          </div>
+          </Card>
         )}
 
-        <div style={{ display: 'grid', gap: '12px' }}>
-          <div>
-            <strong style={{ color: 'var(--text-color)', opacity: '0.7' }}>Breed:</strong>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Breed
+            </Typography>
             {isEditing ? (
-              <input
-                type="text"
+              <TextField
                 value={editForm.breed}
                 onChange={(e) => handleFormChange('breed', e.target.value)}
                 placeholder="Enter breed"
-                style={{
-                  marginLeft: '8px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  backgroundColor: 'var(--card-bg)',
-                  color: 'var(--text-color)',
-                  width: '200px'
-                }}
+                variant="outlined"
+                size="small"
+                fullWidth
               />
             ) : (
-              <span style={{ marginLeft: '8px' }}>{pet.breed || 'Not specified'}</span>
+              <Typography variant="body1">
+                {pet.breed || 'Not specified'}
+              </Typography>
             )}
-          </div>
+          </Grid>
           
-          <div>
-            <strong style={{ color: 'var(--text-color)', opacity: '0.7' }}>Age:</strong>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Age
+            </Typography>
             {isEditing ? (
-              <input
+              <TextField
                 type="number"
                 value={editForm.age}
                 onChange={(e) => handleFormChange('age', e.target.value)}
                 placeholder="Enter age"
-                min="0"
-                style={{
-                  marginLeft: '8px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  backgroundColor: 'var(--card-bg)',
-                  color: 'var(--text-color)',
-                  width: '100px'
-                }}
+                variant="outlined"
+                size="small"
+                fullWidth
+                inputProps={{ min: 0 }}
               />
             ) : (
-              <span style={{ marginLeft: '8px' }}>
+              <Typography variant="body1">
                 {pet.age !== null && pet.age !== undefined ? `${pet.age} years old` : 'Not specified'}
-              </span>
+              </Typography>
             )}
-          </div>
+          </Grid>
           
-          <div>
-            <strong style={{ color: 'var(--text-color)', opacity: '0.7' }}>Weight:</strong>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Weight
+            </Typography>
             {isEditing ? (
-              <input
+              <TextField
                 type="number"
                 value={editForm.weight}
                 onChange={(e) => handleFormChange('weight', e.target.value)}
                 placeholder="Enter weight"
-                min="0"
-                step="0.1"
-                style={{
-                  marginLeft: '8px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  backgroundColor: 'var(--card-bg)',
-                  color: 'var(--text-color)',
-                  width: '100px'
-                }}
+                variant="outlined"
+                size="small"
+                fullWidth
+                inputProps={{ min: 0, step: 0.1 }}
               />
             ) : (
-              <span style={{ marginLeft: '8px' }}>
+              <Typography variant="body1">
                 {pet.weight !== null && pet.weight !== undefined ? `${pet.weight} kg` : 'Not specified'}
-              </span>
+              </Typography>
             )}
-          </div>
+          </Grid>
           
-          <div>
-            <strong style={{ color: 'var(--text-color)', opacity: '0.7' }}>Added:</strong>
-            <span style={{ marginLeft: '8px' }}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Added
+            </Typography>
+            <Typography variant="body1">
               {new Date(pet.createdAt).toLocaleDateString()}
-            </span>
-          </div>
+            </Typography>
+          </Grid>
           
           {pet.updatedAt !== pet.createdAt && (
-            <div>
-              <strong style={{ color: 'var(--text-color)', opacity: '0.7' }}>Last updated:</strong>
-              <span style={{ marginLeft: '8px' }}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Last updated
+              </Typography>
+              <Typography variant="body1">
                 {new Date(pet.updatedAt).toLocaleDateString()}
-              </span>
-            </div>
+              </Typography>
+            </Grid>
           )}
-        </div>
-      </div>
-    </div>
+        </Grid>
+      </Paper>
+    </Box>
   );
 };
 

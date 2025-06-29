@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
+import { Box, CircularProgress } from '@mui/material';
 import { getAnonymousAuth } from '../services/authService';
 
 interface ProtectedRouteProps {
@@ -29,7 +30,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, []);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return <>{children}</>;
