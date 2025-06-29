@@ -77,7 +77,7 @@ const MainPage = () => {
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
       <Typography variant="h3" component="h1" gutterBottom>
-        Welcome to the Main Page
+        Welcome to EverPal
       </Typography>
       
       {userData.isAnonymous ? (

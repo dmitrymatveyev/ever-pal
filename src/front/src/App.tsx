@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Container, useMediaQuery } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline, Container, useMediaQuery, Box } from '@mui/material';
 import { useMemo } from 'react';
 import MainPage from './pages/MainPage';
 import PetProfile from './pages/PetProfile';
@@ -15,11 +15,11 @@ function App() {
         palette: {
           mode: prefersDarkMode ? 'dark' : 'light',
           primary: {
-            main: '#007bff',
+            main: '#579291',
           },
           secondary: {
-            main: '#6c757d',
-          },
+            main: '#2f7b7c',
+          }
         },
       }),
     [prefersDarkMode],
@@ -29,6 +29,25 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mb: 4,
+          }}
+        >
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="EverPal Logo"
+            sx={{
+              maxWidth: '100%',
+              maxHeight: { xs: 120, sm: 150, md: 200 },
+              width: 'auto',
+              height: 'auto',
+            }}
+          />
+        </Box>
         <Router>
           <Routes>
             <Route 
