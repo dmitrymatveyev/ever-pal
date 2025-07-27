@@ -72,6 +72,9 @@ builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
 // Register the Pet Service
 builder.Services.AddSingleton<IPetService, PetService>();
 
+// Register the Note Service
+builder.Services.AddSingleton<INoteService, NoteService>();
+
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
