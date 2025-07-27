@@ -1,5 +1,6 @@
 using EverPal.WebApi.Models;
 using EverPal.WebApi.Services;
+using EverPal.WebApi.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -25,7 +26,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var userId = GetUserId();
+                var userId = User.GetUserId();
                 var note = await _noteService.CreateNoteAsync(userId, request);
                 return Ok(note);
             }
@@ -46,7 +47,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var userId = GetUserId();
+                var userId = User.GetUserId();
                 var notes = await _noteService.GetPetNotesAsync(petId, userId);
                 return Ok(notes);
             }
@@ -67,7 +68,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var userId = GetUserId();
+                var userId = User.GetUserId();
                 var note = await _noteService.GetNoteAsync(id, userId);
                 
                 if (note == null)
@@ -89,7 +90,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var userId = GetUserId();
+                var userId = User.GetUserId();
                 var note = await _noteService.UpdateNoteAsync(id, userId, request);
                 
                 if (note == null)
@@ -111,7 +112,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var userId = GetUserId();
+                var userId = User.GetUserId();
                 var deleted = await _noteService.DeleteNoteAsync(id, userId);
                 
                 if (!deleted)
@@ -128,16 +129,5 @@ namespace EverPal.WebApi.Controllers
             }
         }
 
-        private Guid GetUserId()
-        {
-            var userIdClaim = User.FindFirst("user_id")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            {
-                throw new UnauthorizedAccessException("Unable to determine user ID");
-            }
-            
-            return userId;
-        }
     }
 }

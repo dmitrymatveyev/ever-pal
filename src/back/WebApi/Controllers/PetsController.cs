@@ -1,5 +1,6 @@
 using EverPal.WebApi.Models;
 using EverPal.WebApi.Services;
+using EverPal.WebApi.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Dapper;
@@ -26,7 +27,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var ownerId = GetUserId();
+                var ownerId = User.GetUserId();
                 var pet = await _petService.CreatePetAsync(ownerId, request);
                 return Ok(pet);
             }
@@ -42,7 +43,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var ownerId = GetUserId();
+                var ownerId = User.GetUserId();
                 var pets = await _petService.GetUserPetsAsync(ownerId);
                 return Ok(pets);
             }
@@ -58,7 +59,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var ownerId = GetUserId();
+                var ownerId = User.GetUserId();
                 var pet = await _petService.GetPetAsync(id, ownerId);
                 
                 if (pet == null)
@@ -78,7 +79,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var ownerId = GetUserId();
+                var ownerId = User.GetUserId();
                 var pet = await _petService.UpdatePetAsync(id, ownerId, request);
                 
                 if (pet == null)
@@ -98,7 +99,7 @@ namespace EverPal.WebApi.Controllers
         {
             try
             {
-                var ownerId = GetUserId();
+                var ownerId = User.GetUserId();
                 var deleted = await _petService.DeletePetAsync(id, ownerId);
                 
                 if (!deleted)
@@ -113,16 +114,5 @@ namespace EverPal.WebApi.Controllers
             }
         }
 
-        private Guid GetUserId()
-        {
-            var userIdClaim = User.FindFirst("user_id")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-            {
-                throw new UnauthorizedAccessException("Unable to determine user ID");
-            }
-            
-            return userId;
-        }
     }
 }
