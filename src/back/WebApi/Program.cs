@@ -69,11 +69,17 @@ builder.Services.AddSingleton<IAnonymousAuthService, AnonymousAuthService>();
 // Register the Firebase Auth Service
 builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
 
+// Register the Pet Ownership Service
+builder.Services.AddSingleton<IPetOwnershipService, PetOwnershipService>();
+
 // Register the Pet Service
 builder.Services.AddSingleton<IPetService, PetService>();
 
 // Register the Note Service
 builder.Services.AddSingleton<INoteService, NoteService>();
+
+// Register the Health Log Service
+builder.Services.AddSingleton<IHealthLogService, HealthLogService>();
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -1,0 +1,132 @@
+using EverPal.WebApi.Models;
+using EverPal.WebApi.Services;
+using EverPal.WebApi.Extensions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace EverPal.WebApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class HealthLogsController : ControllerBase
+    {
+        private readonly IHealthLogService _healthLogService;
+        private readonly ILogger<HealthLogsController> _logger;
+
+        public HealthLogsController(IHealthLogService healthLogService, ILogger<HealthLogsController> logger)
+        {
+            _healthLogService = healthLogService;
+            _logger = logger;
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<HealthLog>> CreateHealthLog([FromBody] CreateHealthLogRequest request)
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var healthLog = await _healthLogService.CreateHealthLogAsync(userId, request);
+                return Ok(healthLog);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access attempt to create health log for pet {PetId}", request.PetId);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating health log");
+                return BadRequest(new { message = "Failed to create health log", error = ex.Message });
+            }
+        }
+
+        [HttpGet("pet/{petId}")]
+        public async Task<ActionResult<IEnumerable<HealthLog>>> GetHealthLogs(Guid petId)
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var healthLogs = await _healthLogService.GetHealthLogsAsync(petId, userId);
+                return Ok(healthLogs);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access attempt to get health logs for pet {PetId}", petId);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting pet health logs");
+                return BadRequest(new { message = "Failed to get pet health logs", error = ex.Message });
+            }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<HealthLog>> GetHealthLog(Guid id)
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var healthLog = await _healthLogService.GetHealthLogAsync(id, userId);
+
+                if (healthLog == null)
+                {
+                    return NotFound(new { message = "Health log not found" });
+                }
+
+                return Ok(healthLog);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting health log");
+                return BadRequest(new { message = "Failed to get health log", error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<HealthLog>> UpdateHealthLog(Guid id, [FromBody] UpdateHealthLogRequest request)
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var healthLog = await _healthLogService.UpdateHealthLogAsync(id, userId, request);
+
+                if (healthLog == null)
+                {
+                    return NotFound(new { message = "Health log not found" });
+                }
+
+                return Ok(healthLog);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating health log");
+                return BadRequest(new { message = "Failed to update health log", error = ex.Message });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteHealthLog(Guid id)
+        {
+            try
+            {
+                var userId = User.GetUserId();
+                var deleted = await _healthLogService.DeleteHealthLogAsync(id, userId);
+
+                if (!deleted)
+                {
+                    return NotFound(new { message = "Health log not found" });
+                }
+
+                return Ok(new { message = "Health log deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting health log");
+                return BadRequest(new { message = "Failed to delete health log", error = ex.Message });
+            }
+        }
+    }
+}

@@ -7,31 +7,20 @@ namespace EverPal.WebApi.Services
     public class NoteService : INoteService
     {
         private readonly string _connectionString;
+        private readonly IPetOwnershipService _petOwnershipService;
 
-        public NoteService(IConfiguration configuration)
+        public NoteService(IConfiguration configuration, IPetOwnershipService petOwnershipService)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _petOwnershipService = petOwnershipService;
         }
 
         public async Task<Note> CreateNoteAsync(Guid userId, CreateNoteRequest request)
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
-            // First verify the user owns the pet
-            var petOwnershipSql = @"
-                SELECT COUNT(1) FROM pets 
-                WHERE id = @PetId AND owner_id = @UserId AND deleted_at IS NULL;";
-
-            var ownsPet = await connection.QuerySingleAsync<int>(petOwnershipSql, new
-            {
-                PetId = request.PetId,
-                UserId = userId
-            });
-
-            if (ownsPet == 0)
-            {
-                throw new UnauthorizedAccessException("Pet not found or access denied");
-            }
+            // Verify the user owns the pet
+            await _petOwnershipService.ValidateUserOwnsPetAsync(userId, request.PetId);
 
             var sql = @"
                 INSERT INTO notes (pet_id, note_text)
@@ -66,25 +55,12 @@ namespace EverPal.WebApi.Services
             return note;
         }
 
-        public async Task<IEnumerable<Note>> GetPetNotesAsync(Guid petId, Guid userId)
+        public async Task<IEnumerable<Note>> GetNotesAsync(Guid petId, Guid userId)
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
-            // First verify the user owns the pet
-            var petOwnershipSql = @"
-                SELECT COUNT(1) FROM pets 
-                WHERE id = @PetId AND owner_id = @UserId AND deleted_at IS NULL;";
-
-            var ownsPet = await connection.QuerySingleAsync<int>(petOwnershipSql, new
-            {
-                PetId = petId,
-                UserId = userId
-            });
-
-            if (ownsPet == 0)
-            {
-                throw new UnauthorizedAccessException("Pet not found or access denied");
-            }
+            // Verify the user owns the pet
+            await _petOwnershipService.ValidateUserOwnsPetAsync(userId, petId);
 
             var sql = @"
                 SELECT id as Id, pet_id as PetId, note_text as NoteText, created_at as CreatedAt, updated_at as UpdatedAt
