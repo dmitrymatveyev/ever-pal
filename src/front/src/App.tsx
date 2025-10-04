@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Container, useMediaQuery, Box } from '@mui/material';
 import { useMemo } from 'react';
-import MainPage from './pages/MainPage';
-import PetProfile from './pages/PetProfile';
+import HealthJournal from './pages/HealthJournal';
+import AddFirstPet from './pages/AddFirstPet';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -50,24 +50,23 @@ function App() {
         </Box>
         <Router>
           <Routes>
-            <Route 
-              path="/main" 
+            <Route
+              path="/"
               element={
                 <ProtectedRoute>
-                  <MainPage />
+                  <HealthJournal />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/pet/:petId" 
+            <Route
+              path="/add-first-pet"
               element={
                 <ProtectedRoute>
-                  <PetProfile />
+                  <AddFirstPet />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route path="/" element={<Navigate to="/main" replace />} />
-            <Route path="*" element={<Navigate to="/main" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
       </Container>
