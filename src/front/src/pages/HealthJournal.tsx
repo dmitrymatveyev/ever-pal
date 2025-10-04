@@ -18,12 +18,13 @@ import {
   Divider,
   IconButton
 } from '@mui/material';
-import { Add, Pets, Edit, Delete } from '@mui/icons-material';
+import { Add, Pets, Edit, Delete, Settings } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
 import { getHealthLogs, deleteHealthLog, type HealthLog } from '../services/healthLogService';
 import AddPetDialog from '../components/AddPetDialog';
 import AddLogEventDialog from '../components/AddLogEventDialog';
 import EditHealthLogDialog from '../components/EditHealthLogDialog';
+import EditPetDialog from '../components/EditPetDialog';
 
 interface UserData {
   email: string;
@@ -43,6 +44,7 @@ const HealthJournal = () => {
   const [addPetDialogOpen, setAddPetDialogOpen] = useState(false);
   const [addLogDialogOpen, setAddLogDialogOpen] = useState(false);
   const [editLogDialogOpen, setEditLogDialogOpen] = useState(false);
+  const [editPetDialogOpen, setEditPetDialogOpen] = useState(false);
   const [selectedHealthLog, setSelectedHealthLog] = useState<HealthLog | null>(null);
   const [visibleCount, setVisibleCount] = useState(5);
 
@@ -67,8 +69,17 @@ const HealthJournal = () => {
           // No pets - redirect to add first pet
           navigate('/add-first-pet');
         } else {
-          // Select first pet by default
-          setSelectedPetId(userPets[0].id);
+          // Try to restore previously selected pet
+          const savedPetId = localStorage.getItem('selectedPetId');
+          const petExists = savedPetId && userPets.some(p => p.id === savedPetId);
+
+          if (petExists) {
+            setSelectedPetId(savedPetId);
+          } else {
+            // Select first pet by default and save it
+            setSelectedPetId(userPets[0].id);
+            localStorage.setItem('selectedPetId', userPets[0].id);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -113,6 +124,7 @@ const HealthJournal = () => {
     } else {
       setSelectedPetId(value);
       setVisibleCount(5); // Reset visible count when switching pets
+      localStorage.setItem('selectedPetId', value); // Remember selected pet
     }
   };
 
@@ -127,7 +139,9 @@ const HealthJournal = () => {
 
       // Select the newly added pet (last one)
       if (userPets.length > 0) {
-        setSelectedPetId(userPets[userPets.length - 1].id);
+        const newPetId = userPets[userPets.length - 1].id;
+        setSelectedPetId(newPetId);
+        localStorage.setItem('selectedPetId', newPetId); // Remember newly added pet
       }
     } catch (err) {
       console.error('Failed to refresh pets:', err);
@@ -213,6 +227,48 @@ const HealthJournal = () => {
     setVisibleCount(prev => prev + 5);
   };
 
+  const handlePetUpdated = async () => {
+    if (!userData) {
+      return;
+    }
+
+    try {
+      const userPets = await getPets(userData.token!, userData.isAnonymous);
+      setPets(userPets);
+    } catch (err) {
+      console.error('Failed to refresh pets:', err);
+    }
+  };
+
+  const handlePetDeleted = async () => {
+    if (!userData) {
+      return;
+    }
+
+    try {
+      const userPets = await getPets(userData.token!, userData.isAnonymous);
+      setPets(userPets);
+
+      if (userPets.length === 0) {
+        // No pets left - redirect to add first pet
+        navigate('/add-first-pet');
+      } else {
+        // Select first pet if the deleted pet was selected
+        const deletedPetId = selectedPetId;
+        const petStillExists = userPets.some(p => p.id === deletedPetId);
+
+        if (!petStillExists) {
+          const newPetId = userPets[0].id;
+          setSelectedPetId(newPetId);
+          localStorage.setItem('selectedPetId', newPetId);
+          setVisibleCount(5); // Reset visible count
+        }
+      }
+    } catch (err) {
+      console.error('Failed to refresh pets after deletion:', err);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
@@ -261,9 +317,18 @@ const HealthJournal = () => {
         </FormControl>
 
         {selectedPet && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Pets color="primary" />
-            <Typography variant="h6">{selectedPet.name}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Pets color="primary" />
+              <Typography variant="h6">{selectedPet.name}</Typography>
+            </Box>
+            <IconButton
+              onClick={() => setEditPetDialogOpen(true)}
+              aria-label="edit pet"
+              size="small"
+            >
+              <Settings />
+            </IconButton>
           </Box>
         )}
       </Paper>
@@ -359,6 +424,14 @@ const HealthJournal = () => {
         onClose={() => setEditLogDialogOpen(false)}
         healthLog={selectedHealthLog}
         onLogUpdated={handleLogUpdated}
+      />
+
+      <EditPetDialog
+        open={editPetDialogOpen}
+        onClose={() => setEditPetDialogOpen(false)}
+        pet={selectedPet || null}
+        onPetUpdated={handlePetUpdated}
+        onPetDeleted={handlePetDeleted}
       />
     </Box>
   );
