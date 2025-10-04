@@ -43,12 +43,15 @@ namespace EverPal.WebApi.Controllers
         }
 
         [HttpGet("pet/{petId}")]
-        public async Task<ActionResult<IEnumerable<HealthLog>>> GetHealthLogs(Guid petId)
+        public async Task<ActionResult<IEnumerable<HealthLog>>> GetPetHealthLogs(
+            Guid petId,
+            [FromQuery] int limit = 10,
+            [FromQuery] int offset = 0)
         {
             try
             {
                 var userId = User.GetUserId();
-                var healthLogs = await _healthLogService.GetHealthLogsAsync(petId, userId);
+                var healthLogs = await _healthLogService.GetHealthLogsAsync(petId, userId, limit, offset);
                 return Ok(healthLogs);
             }
             catch (UnauthorizedAccessException ex)

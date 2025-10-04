@@ -58,7 +58,7 @@ namespace EverPal.WebApi.Services
             return healthLog;
         }
 
-        public async Task<IEnumerable<HealthLog>> GetHealthLogsAsync(Guid petId, Guid userId)
+        public async Task<IEnumerable<HealthLog>> GetHealthLogsAsync(Guid petId, Guid userId, int limit, int offset)
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
@@ -69,9 +69,15 @@ namespace EverPal.WebApi.Services
                 SELECT id as Id, pet_id as PetId, entry_text as EntryText, logged_at as LoggedAt, created_at as CreatedAt, updated_at as UpdatedAt
                 FROM health_logs
                 WHERE pet_id = @PetId AND deleted_at IS NULL
-                ORDER BY logged_at DESC;";
+                ORDER BY logged_at DESC
+                LIMIT @Limit OFFSET @Offset;";
 
-            var healthLogs = await connection.QueryAsync<HealthLog>(sql, new { PetId = petId });
+            var healthLogs = await connection.QueryAsync<HealthLog>(sql, new
+            {
+                PetId = petId,
+                Limit = limit,
+                Offset = offset
+            });
             return healthLogs;
         }
 

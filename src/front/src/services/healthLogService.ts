@@ -23,11 +23,15 @@ export interface UpdateHealthLogRequest {
 export const getHealthLogs = async (
   petId: string,
   token: string,
-  isAnonymous: boolean = false
+  isAnonymous: boolean = false,
+  limit: number = 10,
+  offset: number = 0
 ): Promise<HealthLog[]> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE_URL}/healthlogs/pet/${petId}`, {
+  const url = `${API_BASE_URL}/healthlogs/pet/${petId}?limit=${limit}&offset=${offset}`;
+
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Authorization': authHeader,

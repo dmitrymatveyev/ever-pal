@@ -100,12 +100,9 @@ const HealthJournal = () => {
 
       setLoadingLogs(true);
       try {
-        const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
-        // Sort by loggedAt descending
-        const sortedLogs = logs.sort((a, b) =>
-          new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-        );
-        setHealthLogs(sortedLogs);
+        // Fetch initial 5 logs
+        const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 5, 0);
+        setHealthLogs(logs);
       } catch (err) {
         console.error('Failed to fetch health logs:', err);
         setError('Failed to load health logs');
@@ -154,11 +151,9 @@ const HealthJournal = () => {
     }
 
     try {
-      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
-      const sortedLogs = logs.sort((a, b) =>
-        new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-      );
-      setHealthLogs(sortedLogs);
+      // Fetch initial 5 logs after adding
+      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 5, 0);
+      setHealthLogs(logs);
       setVisibleCount(5); // Reset visible count
     } catch (err) {
       console.error('Failed to refresh health logs:', err);
@@ -176,11 +171,9 @@ const HealthJournal = () => {
     }
 
     try {
-      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
-      const sortedLogs = logs.sort((a, b) =>
-        new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-      );
-      setHealthLogs(sortedLogs);
+      // Refetch current number of visible logs
+      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, visibleCount, 0);
+      setHealthLogs(logs);
       // Keep current visible count after update
     } catch (err) {
       console.error('Failed to refresh health logs:', err);
@@ -195,12 +188,9 @@ const HealthJournal = () => {
     try {
       await deleteHealthLog(logId, userData.token!, userData.isAnonymous);
 
-      // Refresh health logs
-      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
-      const sortedLogs = logs.sort((a, b) =>
-        new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-      );
-      setHealthLogs(sortedLogs);
+      // Refresh health logs - fetch current visible count
+      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, visibleCount, 0);
+      setHealthLogs(logs);
       // Keep current visible count after deletion
     } catch (err) {
       console.error('Failed to delete health log:', err);
@@ -220,11 +210,26 @@ const HealthJournal = () => {
   };
 
   const selectedPet = pets.find(p => p.id === selectedPetId);
-  const visibleLogs = healthLogs.slice(0, visibleCount);
-  const hasMoreLogs = healthLogs.length > visibleCount;
+  const visibleLogs = healthLogs;
+  const hasMoreLogs = healthLogs.length === visibleCount && healthLogs.length % 5 === 0;
 
-  const handleShowMore = () => {
-    setVisibleCount(prev => prev + 5);
+  const handleShowMore = async () => {
+    if (!selectedPetId || !userData) {
+      return;
+    }
+
+    const newVisibleCount = visibleCount + 5;
+
+    try {
+      // Fetch additional 5 logs
+      const newLogs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 5, visibleCount);
+
+      // Append new logs to existing ones
+      setHealthLogs(prev => [...prev, ...newLogs]);
+      setVisibleCount(newVisibleCount);
+    } catch (err) {
+      console.error('Failed to load more health logs:', err);
+    }
   };
 
   const handlePetUpdated = async () => {
