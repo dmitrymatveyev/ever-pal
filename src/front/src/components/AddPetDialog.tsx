@@ -15,7 +15,7 @@ import { createPet, type CreatePetRequest } from '../services/petService';
 interface AddPetDialogProps {
   open: boolean;
   onClose: () => void;
-  onPetAdded: () => void;
+  onPetAdded: (petId: string) => void;
 }
 
 const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
@@ -57,7 +57,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
         photoUrl: formData.photoUrl?.trim() || undefined
       };
 
-      await createPet(userData.token, petData, userData.isAnonymous);
+      const newPet = await createPet(userData.token, petData, userData.isAnonymous);
 
       // Reset form
       setFormData({
@@ -68,7 +68,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
         photoUrl: ''
       });
 
-      onPetAdded();
+      onPetAdded(newPet.id);
       onClose();
     } catch (err) {
       console.error('Failed to create pet:', err);

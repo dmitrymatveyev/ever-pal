@@ -125,7 +125,7 @@ const HealthJournal = () => {
     }
   };
 
-  const handlePetAdded = async () => {
+  const handlePetAdded = async (newPetId: string) => {
     if (!userData) {
       return;
     }
@@ -134,12 +134,9 @@ const HealthJournal = () => {
       const userPets = await getPets(userData.token!, userData.isAnonymous);
       setPets(userPets);
 
-      // Select the newly added pet (last one)
-      if (userPets.length > 0) {
-        const newPetId = userPets[userPets.length - 1].id;
-        setSelectedPetId(newPetId);
-        localStorage.setItem('selectedPetId', newPetId); // Remember newly added pet
-      }
+      // Select the newly added pet by ID
+      setSelectedPetId(newPetId);
+      localStorage.setItem('selectedPetId', newPetId); // Remember newly added pet
     } catch (err) {
       console.error('Failed to refresh pets:', err);
     }
