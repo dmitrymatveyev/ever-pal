@@ -49,7 +49,7 @@ namespace EverPal.WebApi.Services
             var sql = @"
                 SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
                 FROM pets
-                WHERE id = @PetId AND owner_id = @OwnerId;";
+                WHERE id = @PetId AND owner_id = @OwnerId AND deleted_at IS NULL;";
 
             var pet = await connection.QuerySingleOrDefaultAsync<Pet>(sql, new
             {
@@ -67,7 +67,7 @@ namespace EverPal.WebApi.Services
             var sql = @"
                 SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
                 FROM pets
-                WHERE owner_id = @OwnerId
+                WHERE owner_id = @OwnerId AND deleted_at IS NULL
                 ORDER BY created_at DESC;";
 
             var pets = await connection.QueryAsync<Pet>(sql, new { OwnerId = ownerId });
@@ -127,7 +127,7 @@ namespace EverPal.WebApi.Services
             var sql = $@"
                 UPDATE pets
                 SET {string.Join(", ", setParts)}
-                WHERE id = @PetId AND owner_id = @OwnerId
+                WHERE id = @PetId AND owner_id = @OwnerId AND deleted_at IS NULL
                 RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt;";
 
             var pet = await connection.QuerySingleOrDefaultAsync<Pet>(sql, parameters);
@@ -137,10 +137,11 @@ namespace EverPal.WebApi.Services
         public async Task<bool> DeletePetAsync(Guid petId, Guid ownerId)
         {
             using var connection = new NpgsqlConnection(_connectionString);
-            
+
             var sql = @"
-                DELETE FROM pets 
-                WHERE id = @PetId AND owner_id = @OwnerId;";
+                UPDATE pets
+                SET deleted_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+                WHERE id = @PetId AND owner_id = @OwnerId AND deleted_at IS NULL;";
 
             var rowsAffected = await connection.ExecuteAsync(sql, new
             {
