@@ -44,6 +44,7 @@ const HealthJournal = () => {
   const [addLogDialogOpen, setAddLogDialogOpen] = useState(false);
   const [editLogDialogOpen, setEditLogDialogOpen] = useState(false);
   const [selectedHealthLog, setSelectedHealthLog] = useState<HealthLog | null>(null);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -89,10 +90,10 @@ const HealthJournal = () => {
       setLoadingLogs(true);
       try {
         const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
-        // Sort by loggedAt descending and take first 5
+        // Sort by loggedAt descending
         const sortedLogs = logs.sort((a, b) =>
           new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-        ).slice(0, 5);
+        );
         setHealthLogs(sortedLogs);
       } catch (err) {
         console.error('Failed to fetch health logs:', err);
@@ -111,6 +112,7 @@ const HealthJournal = () => {
       setAddPetDialogOpen(true);
     } else {
       setSelectedPetId(value);
+      setVisibleCount(5); // Reset visible count when switching pets
     }
   };
 
@@ -141,8 +143,9 @@ const HealthJournal = () => {
       const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
       const sortedLogs = logs.sort((a, b) =>
         new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-      ).slice(0, 5);
+      );
       setHealthLogs(sortedLogs);
+      setVisibleCount(5); // Reset visible count
     } catch (err) {
       console.error('Failed to refresh health logs:', err);
     }
@@ -162,8 +165,9 @@ const HealthJournal = () => {
       const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
       const sortedLogs = logs.sort((a, b) =>
         new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-      ).slice(0, 5);
+      );
       setHealthLogs(sortedLogs);
+      // Keep current visible count after update
     } catch (err) {
       console.error('Failed to refresh health logs:', err);
     }
@@ -181,8 +185,9 @@ const HealthJournal = () => {
       const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous);
       const sortedLogs = logs.sort((a, b) =>
         new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-      ).slice(0, 5);
+      );
       setHealthLogs(sortedLogs);
+      // Keep current visible count after deletion
     } catch (err) {
       console.error('Failed to delete health log:', err);
       setError('Failed to delete health log. Please try again.');
@@ -201,6 +206,12 @@ const HealthJournal = () => {
   };
 
   const selectedPet = pets.find(p => p.id === selectedPetId);
+  const visibleLogs = healthLogs.slice(0, visibleCount);
+  const hasMoreLogs = healthLogs.length > visibleCount;
+
+  const handleShowMore = () => {
+    setVisibleCount(prev => prev + 5);
+  };
 
   if (loading) {
     return (
@@ -280,38 +291,50 @@ const HealthJournal = () => {
             No health events logged yet. Click "Log Health Event" to add your first entry.
           </Alert>
         ) : (
-          <List>
-            {healthLogs.map((log, index) => (
-              <Box key={log.id}>
-                {index > 0 && <Divider />}
-                <ListItem
-                  alignItems="flex-start"
-                  secondaryAction={
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <IconButton
-                        aria-label="edit"
-                        onClick={() => handleEditClick(log)}
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        aria-label="delete"
-                        onClick={() => handleDeleteClick(log.id)}
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Box>
-                  }
+          <>
+            <List>
+              {visibleLogs.map((log, index) => (
+                <Box key={log.id}>
+                  {index > 0 && <Divider />}
+                  <ListItem
+                    alignItems="flex-start"
+                    secondaryAction={
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton
+                          aria-label="edit"
+                          onClick={() => handleEditClick(log)}
+                        >
+                          <Edit />
+                        </IconButton>
+                        <IconButton
+                          aria-label="delete"
+                          onClick={() => handleDeleteClick(log.id)}
+                          color="error"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </Box>
+                    }
+                  >
+                    <ListItemText
+                      primary={log.entryText}
+                      secondary={formatDate(log.loggedAt)}
+                    />
+                  </ListItem>
+                </Box>
+              ))}
+            </List>
+            {hasMoreLogs && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleShowMore}
                 >
-                  <ListItemText
-                    primary={log.entryText}
-                    secondary={formatDate(log.loggedAt)}
-                  />
-                </ListItem>
+                  Show More
+                </Button>
               </Box>
-            ))}
-          </List>
+            )}
+          </>
         )}
       </Paper>
 
