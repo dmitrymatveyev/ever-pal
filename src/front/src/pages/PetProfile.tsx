@@ -213,12 +213,12 @@ const PetProfile = () => {
           )}
         </Box>
         
-        {pet.photoUrl && (
+        {(pet.photoBase64 || pet.photoUrl) && (
           <Card sx={{ mb: 3, maxWidth: 300 }}>
             <CardMedia
               component="img"
               height="300"
-              image={pet.photoUrl}
+              image={pet.photoBase64 || pet.photoUrl}
               alt={pet.name}
             />
           </Card>

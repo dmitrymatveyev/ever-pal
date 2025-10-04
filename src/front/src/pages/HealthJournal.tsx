@@ -16,7 +16,8 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  IconButton
+  IconButton,
+  Avatar
 } from '@mui/material';
 import { Add, Pets, Edit, Delete, Settings } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
@@ -320,8 +321,18 @@ const HealthJournal = () => {
 
         {selectedPet && (
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Pets color="primary" />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {(selectedPet.photoBase64 || selectedPet.photoUrl) ? (
+                <Avatar
+                  src={selectedPet.photoBase64 || selectedPet.photoUrl}
+                  alt={selectedPet.name}
+                  sx={{ width: 64, height: 64 }}
+                />
+              ) : (
+                <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
+                  <Pets sx={{ fontSize: 32 }} />
+                </Avatar>
+              )}
               <Typography variant="h6">{selectedPet.name}</Typography>
             </Box>
             <IconButton

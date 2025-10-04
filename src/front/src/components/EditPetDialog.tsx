@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -11,6 +11,7 @@ import {
   Alert
 } from '@mui/material';
 import { updatePet, deletePet, type UpdatePetRequest, type Pet } from '../services/petService';
+import { processImage } from '../utils/imageUtils';
 
 interface EditPetDialogProps {
   open: boolean;
@@ -26,11 +27,13 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
     breed: '',
     age: '',
     weight: '',
-    photoUrl: ''
+    photoBase64: ''
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoFileName, setPhotoFileName] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (pet) {
@@ -39,8 +42,9 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
         breed: pet.breed || '',
         age: pet.age?.toString() || '',
         weight: pet.weight?.toString() || '',
-        photoUrl: pet.photoUrl || ''
+        photoBase64: pet.photoBase64 || ''
       });
+      setPhotoFileName(pet.photoBase64 ? 'Current photo' : '');
     }
   }, [pet]);
 
@@ -49,6 +53,31 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
       ...prev,
       [field]: value
     }));
+  };
+
+  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    try {
+      const base64 = await processImage(file);
+      setFormData(prev => ({
+        ...prev,
+        photoBase64: base64
+      }));
+      setPhotoFileName(file.name);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to process image:', err);
+      setError('Failed to process image. Please try a different image.');
+    }
   };
 
   const handleSubmit = async () => {
@@ -73,7 +102,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
         breed: formData.breed?.trim() || undefined,
         age: formData.age ? parseInt(formData.age, 10) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
-        photoUrl: formData.photoUrl?.trim() || undefined
+        photoBase64: formData.photoBase64?.trim() || undefined
       };
 
       await updatePet(pet.id, updateData, userData.token, userData.isAnonymous);
@@ -166,13 +195,28 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
             fullWidth
             disabled={saving}
           />
-          <TextField
-            label="Photo URL"
-            value={formData.photoUrl}
-            onChange={(e) => handleChange('photoUrl', e.target.value)}
-            fullWidth
-            disabled={saving}
-          />
+          <Box>
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+              disabled={saving}
+            >
+              {photoFileName || 'Upload Photo'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handlePhotoChange}
+              />
+            </Button>
+            {photoFileName && (
+              <Box sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
+                {photoFileName}
+              </Box>
+            )}
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'space-between' }}>

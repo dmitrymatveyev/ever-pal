@@ -5,6 +5,7 @@ export interface Pet {
   ownerId: string;
   name: string;
   photoUrl?: string;
+  photoBase64?: string;
   breed?: string;
   weight?: number;
   age?: number;
@@ -15,6 +16,7 @@ export interface Pet {
 export interface CreatePetRequest {
   name: string;
   photoUrl?: string;
+  photoBase64?: string;
   breed?: string;
   weight?: number;
   age?: number;
@@ -23,6 +25,7 @@ export interface CreatePetRequest {
 export interface UpdatePetRequest {
   name?: string;
   photoUrl?: string;
+  photoBase64?: string;
   breed?: string;
   weight?: number;
   age?: number;

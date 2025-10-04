@@ -1,5 +1,6 @@
 using Dapper;
 using EverPal.WebApi.Models;
+using EverPal.WebApi.Validators;
 using Npgsql;
 
 namespace EverPal.WebApi.Services
@@ -15,18 +16,24 @@ namespace EverPal.WebApi.Services
 
         public async Task<Pet> CreatePetAsync(Guid ownerId, CreatePetRequest request)
         {
+            if (!Base64Validator.IsValidBase64Image(request.PhotoBase64))
+            {
+                throw new ArgumentException("Invalid photo Base64 format or size exceeds 2MB limit");
+            }
+
             using var connection = new NpgsqlConnection(_connectionString);
-            
+
             var sql = @"
-                INSERT INTO pets (owner_id, name, photo_url, breed, weight, age)
-                VALUES (@OwnerId, @Name, @PhotoUrl, @Breed, @Weight, @Age)
-                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt;";
+                INSERT INTO pets (owner_id, name, photo_url, photo_base64, breed, weight, age)
+                VALUES (@OwnerId, @Name, @PhotoUrl, @PhotoBase64, @Breed, @Weight, @Age)
+                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt;";
 
             var pet = await connection.QuerySingleAsync<Pet>(sql, new
             {
                 OwnerId = ownerId,
                 Name = request.Name,
                 PhotoUrl = request.PhotoUrl,
+                PhotoBase64 = request.PhotoBase64,
                 Breed = request.Breed,
                 Weight = request.Weight,
                 Age = request.Age
@@ -38,10 +45,10 @@ namespace EverPal.WebApi.Services
         public async Task<Pet?> GetPetAsync(Guid petId, Guid ownerId)
         {
             using var connection = new NpgsqlConnection(_connectionString);
-            
+
             var sql = @"
-                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
-                FROM pets 
+                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
+                FROM pets
                 WHERE id = @PetId AND owner_id = @OwnerId;";
 
             var pet = await connection.QuerySingleOrDefaultAsync<Pet>(sql, new
@@ -56,10 +63,10 @@ namespace EverPal.WebApi.Services
         public async Task<IEnumerable<Pet>> GetUserPetsAsync(Guid ownerId)
         {
             using var connection = new NpgsqlConnection(_connectionString);
-            
+
             var sql = @"
-                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
-                FROM pets 
+                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
+                FROM pets
                 WHERE owner_id = @OwnerId
                 ORDER BY created_at DESC;";
 
@@ -69,8 +76,13 @@ namespace EverPal.WebApi.Services
 
         public async Task<Pet?> UpdatePetAsync(Guid petId, Guid ownerId, UpdatePetRequest request)
         {
+            if (request.PhotoBase64 != null && !Base64Validator.IsValidBase64Image(request.PhotoBase64))
+            {
+                throw new ArgumentException("Invalid photo Base64 format or size exceeds 2MB limit");
+            }
+
             using var connection = new NpgsqlConnection(_connectionString);
-            
+
             var setParts = new List<string>();
             var parameters = new DynamicParameters();
             parameters.Add("PetId", petId);
@@ -85,6 +97,11 @@ namespace EverPal.WebApi.Services
             {
                 setParts.Add("photo_url = @PhotoUrl");
                 parameters.Add("PhotoUrl", request.PhotoUrl);
+            }
+            if (request.PhotoBase64 != null)
+            {
+                setParts.Add("photo_base64 = @PhotoBase64");
+                parameters.Add("PhotoBase64", request.PhotoBase64);
             }
             if (request.Breed != null)
             {
@@ -103,13 +120,15 @@ namespace EverPal.WebApi.Services
             }
 
             if (setParts.Count == 0)
+            {
                 return await GetPetAsync(petId, ownerId);
+            }
 
             var sql = $@"
-                UPDATE pets 
+                UPDATE pets
                 SET {string.Join(", ", setParts)}
                 WHERE id = @PetId AND owner_id = @OwnerId
-                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt;";
+                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt;";
 
             var pet = await connection.QuerySingleOrDefaultAsync<Pet>(sql, parameters);
             return pet;

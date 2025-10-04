@@ -6,6 +6,7 @@ namespace EverPal.WebApi.Models
         public Guid OwnerId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
+        public string? PhotoBase64 { get; set; }
         public string? Breed { get; set; }
         public decimal? Weight { get; set; }
         public int? Age { get; set; }
@@ -17,6 +18,7 @@ namespace EverPal.WebApi.Models
     {
         public string Name { get; set; } = string.Empty;
         public string? PhotoUrl { get; set; }
+        public string? PhotoBase64 { get; set; }
         public string? Breed { get; set; }
         public decimal? Weight { get; set; }
         public int? Age { get; set; }
@@ -26,6 +28,7 @@ namespace EverPal.WebApi.Models
     {
         public string? Name { get; set; }
         public string? PhotoUrl { get; set; }
+        public string? PhotoBase64 { get; set; }
         public string? Breed { get; set; }
         public decimal? Weight { get; set; }
         public int? Age { get; set; }

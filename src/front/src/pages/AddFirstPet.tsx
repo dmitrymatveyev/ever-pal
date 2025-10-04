@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography,
@@ -10,6 +10,7 @@ import {
   Alert
 } from '@mui/material';
 import { createPet, type CreatePetRequest } from '../services/petService';
+import { processImage } from '../utils/imageUtils';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
@@ -18,16 +19,43 @@ const AddFirstPet = () => {
     breed: '',
     age: undefined,
     weight: undefined,
-    photoUrl: ''
+    photoBase64: undefined
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photoFileName, setPhotoFileName] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (field: keyof CreatePetRequest, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    try {
+      const base64 = await processImage(file);
+      setFormData(prev => ({
+        ...prev,
+        photoBase64: base64
+      }));
+      setPhotoFileName(file.name);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to process image:', err);
+      setError('Failed to process image. Please try a different image.');
+    }
   };
 
   const handleSubmit = async () => {
@@ -48,7 +76,7 @@ const AddFirstPet = () => {
         breed: formData.breed?.trim() || undefined,
         age: formData.age || undefined,
         weight: formData.weight || undefined,
-        photoUrl: formData.photoUrl?.trim() || undefined
+        photoBase64: formData.photoBase64 || undefined
       };
 
       await createPet(userData.token, petData, userData.isAnonymous);
@@ -117,13 +145,28 @@ const AddFirstPet = () => {
             fullWidth
             disabled={saving}
           />
-          <TextField
-            label="Photo URL"
-            value={formData.photoUrl}
-            onChange={(e) => handleChange('photoUrl', e.target.value)}
-            fullWidth
-            disabled={saving}
-          />
+          <Box>
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+              disabled={saving}
+            >
+              {photoFileName || 'Upload Photo'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handlePhotoChange}
+              />
+            </Button>
+            {photoFileName && (
+              <Box sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
+                Selected: {photoFileName}
+              </Box>
+            )}
+          </Box>
 
           <Button
             variant="contained"
