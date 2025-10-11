@@ -8,54 +8,15 @@ namespace EverPal.WebApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IFirebaseAuthService _firebaseAuthService;
         private readonly IAnonymousAuthService _anonymousAuthService;
         private readonly ILogger<AuthController> _logger;
 
         public AuthController(
-            IFirebaseAuthService firebaseAuthService,
             IAnonymousAuthService anonymousAuthService,
             ILogger<AuthController> logger)
         {
-            _firebaseAuthService = firebaseAuthService;
             _anonymousAuthService = anonymousAuthService;
             _logger = logger;
-        }
-
-        [HttpPost("signup")]
-        [NonAction]
-        public async Task<ActionResult<AuthResponse>> SignUp([FromBody] SignUpRequest request)
-        {
-            try
-            {
-                var result = await _firebaseAuthService.SignUpAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during signup");
-                return BadRequest(new { message = "Registration failed", error = ex.Message });
-            }
-        }
-
-        [HttpPost("login")]
-        [NonAction]
-        public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
-        {
-            try
-            {
-                var result = await _firebaseAuthService.LoginAsync(request);
-                return Ok(result);
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Email not verified"))
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during login");
-                return BadRequest(new { message = "Authentication failed", error = ex.Message });
-            }
         }
 
         [HttpPost("anonymous")]
