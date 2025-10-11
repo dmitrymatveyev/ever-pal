@@ -74,6 +74,10 @@ app.UseCors();
 app.UseAnonymousAuth();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Health check endpoint (unauthenticated)
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
 app.MapControllers();
 
 app.Run();
