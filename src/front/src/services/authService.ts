@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../config';
+
 interface AuthResponse {
   token: string;
   refreshToken: string;
@@ -7,7 +9,7 @@ interface AuthResponse {
 }
 
 export const getAnonymousAuth = async (): Promise<AuthResponse> => {
-  const response = await fetch('https://localhost:5001/api/anonymous', {
+  const response = await fetch(`${API_BASE_URL}/anonymous`, {
     method: 'POST',
   });
   

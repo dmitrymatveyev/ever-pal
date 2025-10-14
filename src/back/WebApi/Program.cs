@@ -55,9 +55,14 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.WithOrigins(
+            "https://everpal.app",
+            "https://www.everpal.app",
+            "http://localhost:5173",
+            "https://localhost:5001"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
 
