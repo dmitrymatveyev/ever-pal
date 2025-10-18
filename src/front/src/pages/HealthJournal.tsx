@@ -11,10 +11,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   List,
   ListItem,
-  ListItemText,
   Divider,
   IconButton,
   Avatar
@@ -196,20 +194,41 @@ const HealthJournal = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDateHeader = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time to compare just dates
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    }
+    if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    }
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  };
+
+  const groupLogsByDate = (logs: HealthLog[]) => {
+    return logs.reduce((groups, log) => {
+      const dateHeader = formatDateHeader(log.loggedAt);
+      if (!groups[dateHeader]) {
+        groups[dateHeader] = [];
+      }
+      groups[dateHeader].push(log);
+      return groups;
+    }, {} as Record<string, HealthLog[]>);
   };
 
   const selectedPet = pets.find(p => p.id === selectedPetId);
   const visibleLogs = healthLogs;
   const hasMoreLogs = healthLogs.length === visibleCount && healthLogs.length % 5 === 0;
+  const groupedLogs = groupLogsByDate(visibleLogs);
 
   const handleShowMore = async () => {
     if (!selectedPetId || !userData) {
@@ -290,131 +309,258 @@ const HealthJournal = () => {
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Health Journal
-      </Typography>
-
-      {/* Pet Selection */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel id="pet-select-label">Select Pet</InputLabel>
-          <Select
-            labelId="pet-select-label"
-            value={selectedPetId}
-            label="Select Pet"
-            onChange={handlePetChange}
+      {/* Pet Profile Card */}
+      {selectedPet && (
+        <Paper
+          sx={{
+            p: 4,
+            mb: 3,
+            background: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'linear-gradient(135deg, #2D2D2D 0%, #3A3A3A 100%)'
+                : 'linear-gradient(135deg, #FFFFFF 0%, #F9F7F4 100%)',
+            position: 'relative',
+            overflow: 'visible',
+          }}
+        >
+          {/* Settings Icon */}
+          <IconButton
+            onClick={() => setEditPetDialogOpen(true)}
+            aria-label="edit pet"
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              bgcolor: 'background.paper',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
           >
-            {pets.map((pet) => (
-              <MenuItem key={pet.id} value={pet.id}>
-                {pet.name}
-              </MenuItem>
-            ))}
-            <Divider />
-            <MenuItem value="add-new">
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Add fontSize="small" />
-                <span>Add new pet</span>
-              </Box>
-            </MenuItem>
-          </Select>
-        </FormControl>
+            <Settings />
+          </IconButton>
 
-        {selectedPet && (
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {(selectedPet.photoBase64 || selectedPet.photoUrl) ? (
-                <Avatar
-                  src={selectedPet.photoBase64 || selectedPet.photoUrl}
-                  alt={selectedPet.name}
-                  sx={{ width: 64, height: 64 }}
-                />
-              ) : (
-                <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
-                  <Pets sx={{ fontSize: 32 }} />
-                </Avatar>
-              )}
-              <Typography variant="h6">{selectedPet.name}</Typography>
-            </Box>
-            <IconButton
-              onClick={() => setEditPetDialogOpen(true)}
-              aria-label="edit pet"
-              size="small"
-            >
-              <Settings />
-            </IconButton>
+          {/* Pet Avatar - Prominent */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+            {(selectedPet.photoBase64 || selectedPet.photoUrl) ? (
+              <Avatar
+                src={selectedPet.photoBase64 || selectedPet.photoUrl}
+                alt={selectedPet.name}
+                sx={{
+                  width: 120,
+                  height: 120,
+                  border: 4,
+                  borderColor: 'primary.light',
+                  boxShadow: 3,
+                }}
+              />
+            ) : (
+              <Avatar
+                sx={{
+                  width: 120,
+                  height: 120,
+                  bgcolor: 'primary.main',
+                  border: 4,
+                  borderColor: 'primary.light',
+                  boxShadow: 3,
+                }}
+              >
+                <Pets sx={{ fontSize: 60 }} />
+              </Avatar>
+            )}
+            <Typography variant="h4" sx={{ mt: 2, fontWeight: 700 }}>
+              {selectedPet.name}
+            </Typography>
+            {(selectedPet.breed || selectedPet.age) && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {selectedPet.breed}
+                {selectedPet.breed && selectedPet.age && ' • '}
+                {selectedPet.age && `${selectedPet.age} years old`}
+              </Typography>
+            )}
           </Box>
-        )}
-      </Paper>
 
-      {/* Health Logs */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Recent Health Events</Typography>
+          {/* Pet Switcher / Add Pet */}
+          <FormControl fullWidth size="small">
+            <Select
+              value={selectedPetId}
+              onChange={handlePetChange}
+              sx={{
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'divider',
+                },
+              }}
+            >
+              {pets.map((pet) => (
+                <MenuItem key={pet.id} value={pet.id}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {(pet.photoBase64 || pet.photoUrl) ? (
+                      <Avatar
+                        src={pet.photoBase64 || pet.photoUrl}
+                        sx={{ width: 24, height: 24 }}
+                      />
+                    ) : (
+                      <Avatar sx={{ width: 24, height: 24, fontSize: 14 }}>
+                        <Pets sx={{ fontSize: 14 }} />
+                      </Avatar>
+                    )}
+                    <span>{pet.name}</span>
+                  </Box>
+                </MenuItem>
+              ))}
+              <Divider />
+              <MenuItem value="add-new">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Add fontSize="small" />
+                  <span>Add another pet</span>
+                </Box>
+              </MenuItem>
+            </Select>
+          </FormControl>
+        </Paper>
+      )}
+
+      {/* Journal Section */}
+      <Box>
+        {/* Header with CTA */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Journal
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Track {selectedPet?.name}'s daily journey
+            </Typography>
+          </Box>
           <Button
             variant="contained"
+            size="large"
             startIcon={<Add />}
             onClick={() => setAddLogDialogOpen(true)}
             disabled={!selectedPetId}
+            sx={{
+              boxShadow: 2,
+              '&:hover': {
+                boxShadow: 4,
+              },
+            }}
           >
-            Log Health Event
+            Add Entry
           </Button>
         </Box>
 
         {loadingLogs ? (
-          <Box display="flex" justifyContent="center" p={3}>
-            <CircularProgress />
-          </Box>
+          <Paper sx={{ p: 6 }}>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+              <CircularProgress />
+              <Typography color="text.secondary">Loading journal entries...</Typography>
+            </Box>
+          </Paper>
         ) : healthLogs.length === 0 ? (
-          <Alert severity="info">
-            No health events logged yet. Click "Log Health Event" to add your first entry.
-          </Alert>
+          <Paper sx={{ p: 6, textAlign: 'center' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              Start {selectedPet?.name}'s health journal
+            </Typography>
+            <Typography color="text.secondary" sx={{ mb: 3 }}>
+              Keep track of daily observations, symptoms, and special moments.
+              It helps you notice patterns and share updates with your vet.
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Add />}
+              onClick={() => setAddLogDialogOpen(true)}
+            >
+              Add First Entry
+            </Button>
+          </Paper>
         ) : (
-          <>
-            <List>
-              {visibleLogs.map((log, index) => (
-                <Box key={log.id}>
-                  {index > 0 && <Divider />}
-                  <ListItem
-                    alignItems="flex-start"
-                    secondaryAction={
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton
-                          aria-label="edit"
-                          onClick={() => handleEditClick(log)}
-                        >
-                          <Edit />
-                        </IconButton>
-                        <IconButton
-                          aria-label="delete"
-                          onClick={() => handleDeleteClick(log.id)}
-                          color="error"
-                        >
-                          <Delete />
-                        </IconButton>
-                      </Box>
-                    }
-                  >
-                    <ListItemText
-                      primary={log.entryText}
-                      secondary={formatDate(log.loggedAt)}
-                    />
-                  </ListItem>
-                </Box>
-              ))}
-            </List>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Timeline View */}
+            {Object.entries(groupedLogs).map(([dateHeader, logs]) => (
+              <Paper key={dateHeader} sx={{ p: 3 }}>
+                {/* Date Header */}
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    fontWeight: 700,
+                    color: 'primary.main',
+                    mb: 2,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  {dateHeader}
+                </Typography>
+
+                {/* Logs for this date */}
+                <List disablePadding>
+                  {logs.map((log, index) => (
+                    <Box key={log.id}>
+                      {index > 0 && <Divider sx={{ my: 2 }} />}
+                      <ListItem
+                        disablePadding
+                        sx={{
+                          alignItems: 'flex-start',
+                          flexDirection: 'column',
+                          gap: 1,
+                        }}
+                      >
+                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <Box sx={{ flex: 1, pr: 2 }}>
+                            <Typography variant="body1" sx={{ mb: 0.5 }}>
+                              {log.entryText}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {new Date(log.loggedAt).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                            <IconButton
+                              size="small"
+                              aria-label="edit"
+                              onClick={() => handleEditClick(log)}
+                              sx={{ color: 'text.secondary' }}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              aria-label="delete"
+                              onClick={() => handleDeleteClick(log.id)}
+                              sx={{ color: 'error.main' }}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </Box>
+                      </ListItem>
+                    </Box>
+                  ))}
+                </List>
+              </Paper>
+            ))}
+
+            {/* Load More */}
             {hasMoreLogs && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Button
                   variant="outlined"
                   onClick={handleShowMore}
+                  size="large"
                 >
-                  Show More
+                  Show More Entries
                 </Button>
               </Box>
             )}
-          </>
+          </Box>
         )}
-      </Paper>
+      </Box>
 
       {/* Dialogs */}
       <AddPetDialog

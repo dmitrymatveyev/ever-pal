@@ -8,8 +8,11 @@ import {
   TextField,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  Typography,
+  Avatar,
 } from '@mui/material';
+import { PhotoCamera, Pets } from '@mui/icons-material';
 import { updatePet, deletePet, type UpdatePetRequest, type Pet } from '../services/petService';
 import { processImage } from '../utils/imageUtils';
 
@@ -33,6 +36,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photoFileName, setPhotoFileName] = useState<string>('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -117,17 +121,18 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
     }
   };
 
-  const handleDelete = async () => {
-    if (!pet) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setDeleteConfirmOpen(true);
+  };
 
-    if (!confirm(`Are you sure you want to delete ${pet.name}? This action cannot be undone.`)) {
+  const handleDeleteConfirm = async () => {
+    if (!pet) {
       return;
     }
 
     setDeleting(true);
     setError(null);
+    setDeleteConfirmOpen(false);
 
     try {
       const userStr = localStorage.getItem('user');
@@ -153,94 +158,166 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Edit Pet Profile</DialogTitle>
-      <DialogContent>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Pet Name"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            required
-            fullWidth
-            disabled={saving}
-          />
-          <TextField
-            label="Breed"
-            value={formData.breed}
-            onChange={(e) => handleChange('breed', e.target.value)}
-            fullWidth
-            disabled={saving}
-          />
-          <TextField
-            label="Age (years)"
-            type="number"
-            value={formData.age}
-            onChange={(e) => handleChange('age', e.target.value)}
-            inputProps={{ min: 0 }}
-            fullWidth
-            disabled={saving}
-          />
-          <TextField
-            label="Weight (kg)"
-            type="number"
-            value={formData.weight}
-            onChange={(e) => handleChange('weight', e.target.value)}
-            inputProps={{ min: 0, step: 0.1 }}
-            fullWidth
-            disabled={saving}
-          />
-          <Box>
-            <Button
-              variant="outlined"
-              component="label"
+    <>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
+            {pet?.name}'s Profile
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Update your companion's information
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Photo Section */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              {formData.photoBase64 ? (
+                <Avatar
+                  src={formData.photoBase64}
+                  alt={formData.name}
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    border: 3,
+                    borderColor: 'primary.light',
+                  }}
+                />
+              ) : (
+                <Avatar
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    bgcolor: 'primary.main',
+                    border: 3,
+                    borderColor: 'primary.light',
+                  }}
+                >
+                  <Pets sx={{ fontSize: 60 }} />
+                </Avatar>
+              )}
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<PhotoCamera />}
+                disabled={saving}
+              >
+                {photoFileName ? 'Change Photo' : 'Add Photo'}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                />
+              </Button>
+            </Box>
+
+            {/* Form Fields */}
+            <TextField
+              label="Pet Name"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              required
               fullWidth
               disabled={saving}
-            >
-              {photoFileName || 'Upload Photo'}
-              <input
-                ref={fileInputRef}
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handlePhotoChange}
+            />
+            <TextField
+              label="Breed"
+              value={formData.breed}
+              onChange={(e) => handleChange('breed', e.target.value)}
+              fullWidth
+              disabled={saving}
+              placeholder="e.g., Golden Retriever"
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Age (years)"
+                type="number"
+                value={formData.age}
+                onChange={(e) => handleChange('age', e.target.value)}
+                inputProps={{ min: 0 }}
+                fullWidth
+                disabled={saving}
               />
-            </Button>
-            {photoFileName && (
-              <Box sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
-                {photoFileName}
-              </Box>
-            )}
+              <TextField
+                label="Weight (kg)"
+                type="number"
+                value={formData.weight}
+                onChange={(e) => handleChange('weight', e.target.value)}
+                inputProps={{ min: 0, step: 0.1 }}
+                fullWidth
+                disabled={saving}
+              />
+            </Box>
           </Box>
-        </Box>
-      </DialogContent>
-      <DialogActions sx={{ justifyContent: 'space-between' }}>
-        <Button
-          onClick={handleDelete}
-          color="error"
-          disabled={saving || deleting}
-        >
-          {deleting ? <CircularProgress size={24} /> : 'Delete Pet'}
-        </Button>
-        <Box>
-          <Button onClick={handleClose} disabled={saving || deleting} sx={{ mr: 1 }}>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
+          <Button
+            onClick={handleDeleteClick}
+            color="error"
+            disabled={saving || deleting}
+            variant="outlined"
+          >
+            Remove Pet
+          </Button>
+          <Box>
+            <Button onClick={handleClose} disabled={saving || deleting} sx={{ mr: 1 }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              disabled={saving || deleting}
+              size="large"
+            >
+              {saving ? <CircularProgress size={24} /> : 'Save Changes'}
+            </Button>
+          </Box>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Remove {pet?.name}?
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            This will permanently remove {pet?.name} and all associated journal entries.
+            This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setDeleteConfirmOpen(false)}
+            disabled={deleting}
+          >
             Cancel
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={handleDeleteConfirm}
+            color="error"
             variant="contained"
-            disabled={saving || deleting}
+            disabled={deleting}
           >
-            {saving ? <CircularProgress size={24} /> : 'Save Changes'}
+            {deleting ? <CircularProgress size={24} /> : 'Remove Pet'}
           </Button>
-        </Box>
-      </DialogActions>
-    </Dialog>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

@@ -15,11 +15,66 @@ function App() {
         palette: {
           mode: prefersDarkMode ? 'dark' : 'light',
           primary: {
-            main: '#579291',
+            main: '#4A9B9A',
+            light: '#7DBCBB',
+            dark: '#2A7B7A',
           },
           secondary: {
-            main: '#2f7b7c',
-          }
+            main: '#E07A5F',
+            light: '#F4A79D',
+            dark: '#C55A3F',
+          },
+          background: {
+            default: prefersDarkMode ? '#1A1A1A' : '#F9F7F4',
+            paper: prefersDarkMode ? '#2D2D2D' : '#FFFFFF',
+          },
+        },
+        typography: {
+          fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          h4: {
+            fontWeight: 600,
+            letterSpacing: '-0.02em',
+          },
+          h5: {
+            fontWeight: 600,
+            letterSpacing: '-0.01em',
+          },
+          h6: {
+            fontWeight: 600,
+          },
+          button: {
+            textTransform: 'none',
+            fontWeight: 500,
+          },
+        },
+        shape: {
+          borderRadius: 12,
+        },
+        components: {
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                borderRadius: 24,
+                paddingLeft: 24,
+                paddingRight: 24,
+              },
+              contained: {
+                boxShadow: 'none',
+                '&:hover': {
+                  boxShadow: 'none',
+                },
+              },
+            },
+          },
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                boxShadow: prefersDarkMode
+                  ? '0 2px 8px rgba(0,0,0,0.3)'
+                  : '0 2px 8px rgba(0,0,0,0.08)',
+              },
+            },
+          },
         },
       }),
     [prefersDarkMode],

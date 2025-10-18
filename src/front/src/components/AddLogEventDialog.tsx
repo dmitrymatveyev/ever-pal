@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -8,7 +8,8 @@ import {
   TextField,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  Typography,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -16,6 +17,8 @@ import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { createHealthLog, type CreateHealthLogRequest } from '../services/healthLogService';
+import QuickLogTags from './QuickLogTags';
+import { getPets } from '../services/petService';
 
 interface AddLogEventDialogProps {
   open: boolean;
@@ -25,15 +28,45 @@ interface AddLogEventDialogProps {
 }
 
 const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDialogProps) => {
-  const [entryText, setEntryText] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [selectedTime, setSelectedTime] = useState<Dayjs | null>(dayjs());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [petName, setPetName] = useState<string>('');
+
+  // Fetch pet name when dialog opens
+  useEffect(() => {
+    if (open && petId) {
+      const fetchPetName = async () => {
+        try {
+          const userStr = localStorage.getItem('user');
+          const userData = JSON.parse(userStr!);
+          const pets = await getPets(userData.token, userData.isAnonymous);
+          const pet = pets.find(p => p.id === petId);
+          if (pet) {
+            setPetName(pet.name);
+          }
+        } catch (err) {
+          console.error('Failed to fetch pet name:', err);
+        }
+      };
+      fetchPetName();
+    }
+  }, [open, petId]);
+
+  const handleTagToggle = (label: string) => {
+    setSelectedTags(prev =>
+      prev.includes(label)
+        ? prev.filter(t => t !== label)
+        : [...prev, label]
+    );
+  };
 
   const handleSubmit = async () => {
-    if (!entryText.trim()) {
-      setError('Health event description is required');
+    if (selectedTags.length === 0 && !notes.trim()) {
+      setError('Please select at least one observation or add notes');
       return;
     }
 
@@ -56,16 +89,23 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
         loggedAtISO = selectedDate.toISOString();
       }
 
+      // Combine tags and notes into entry text
+      const tagText = selectedTags.join(', ');
+      const entryText = notes.trim()
+        ? `${tagText}${tagText ? '. ' : ''}${notes.trim()}`
+        : tagText;
+
       const logData: CreateHealthLogRequest = {
         petId: petId,
-        entryText: entryText.trim(),
+        entryText: entryText,
         loggedAt: loggedAtISO
       };
 
       await createHealthLog(logData, userData.token, userData.isAnonymous);
 
       // Reset form
-      setEntryText('');
+      setSelectedTags([]);
+      setNotes('');
       setSelectedDate(dayjs());
       setSelectedTime(dayjs());
 
@@ -82,48 +122,116 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
   const handleClose = () => {
     if (!saving) {
       setError(null);
+      setSelectedTags([]);
+      setNotes('');
       onClose();
     }
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Log Health Event</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <DialogTitle>
+        <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
+          How is {petName || 'your pet'} today?
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Quick tags or write a note - whatever works best for you
+        </Typography>
+      </DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Event Description"
-            value={entryText}
-            onChange={(e) => setEntryText(e.target.value)}
-            required
-            fullWidth
-            multiline
-            rows={4}
-            disabled={saving}
-            placeholder="Describe the health event (e.g., 'Had trouble walking up stairs', 'Refused breakfast')"
-          />
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              label="Event Date"
-              value={selectedDate}
-              onChange={(newValue) => setSelectedDate(newValue)}
+        <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Free-form Notes */}
+          <Box>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                mb: 1,
+                fontWeight: 600,
+                color: 'text.secondary',
+                textTransform: 'uppercase',
+                fontSize: '0.7rem',
+                letterSpacing: '0.05em',
+              }}
+            >
+              What did you notice?
+            </Typography>
+            <TextField
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
               disabled={saving}
+              placeholder="Type anything you noticed... e.g., 'Limping after walk' or 'Very playful today'"
             />
-            <TimePicker
-              label="Event Time"
-              value={selectedTime}
-              onChange={(newValue) => setSelectedTime(newValue)}
-              disabled={saving}
+          </Box>
+
+          {/* Quick Tag Selection */}
+          <Box>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                mb: 1,
+                fontWeight: 600,
+                color: 'text.secondary',
+                textTransform: 'uppercase',
+                fontSize: '0.7rem',
+                letterSpacing: '0.05em',
+              }}
+            >
+              Or pick quick tags (Optional)
+            </Typography>
+            <QuickLogTags
+              selectedTags={selectedTags}
+              onTagToggle={handleTagToggle}
             />
-          </LocalizationProvider>
+          </Box>
+
+          {/* Date/Time Pickers */}
+          <Box>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                mb: 1,
+                fontWeight: 600,
+                color: 'text.secondary',
+                textTransform: 'uppercase',
+                fontSize: '0.7rem',
+                letterSpacing: '0.05em',
+              }}
+            >
+              When did you notice this?
+            </Typography>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <DatePicker
+                  label="Date"
+                  value={selectedDate}
+                  onChange={(newValue) => setSelectedDate(newValue)}
+                  disabled={saving}
+                  slotProps={{ textField: { sx: { flex: 1, minWidth: 200 } } }}
+                />
+                <TimePicker
+                  label="Time"
+                  value={selectedTime}
+                  onChange={(newValue) => setSelectedTime(newValue)}
+                  disabled={saving}
+                  slotProps={{ textField: { sx: { flex: 1, minWidth: 150 } } }}
+                />
+              </Box>
+            </LocalizationProvider>
+          </Box>
         </Box>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
@@ -131,8 +239,9 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
           onClick={handleSubmit}
           variant="contained"
           disabled={saving}
+          size="large"
         >
-          {saving ? <CircularProgress size={24} /> : 'Log Event'}
+          {saving ? <CircularProgress size={24} /> : 'Save'}
         </Button>
       </DialogActions>
     </Dialog>

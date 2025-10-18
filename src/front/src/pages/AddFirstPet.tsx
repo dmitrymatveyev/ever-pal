@@ -93,16 +93,21 @@ const AddFirstPet = () => {
 
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto' }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Welcome to EverPal
-      </Typography>
-      <Typography variant="body1" sx={{ mb: 3 }}>
-        Let's start by adding your first pet to the health journal.
-      </Typography>
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+        <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
+          Welcome to EverPal 🐾
+        </Typography>
+        <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400 }}>
+          Your companion for senior pet care
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
+          Let's start by adding your senior companion to the journal.
+        </Typography>
+      </Box>
 
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Add Your Pet
+      <Paper sx={{ p: 4, boxShadow: 3 }}>
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+          Tell us about your pet
         </Typography>
 
         {error && (
