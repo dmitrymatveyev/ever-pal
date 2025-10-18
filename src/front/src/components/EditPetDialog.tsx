@@ -11,6 +11,8 @@ import {
   Alert,
   Typography,
   Avatar,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { PhotoCamera, Pets } from '@mui/icons-material';
 import { updatePet, deletePet, type UpdatePetRequest, type Pet } from '../services/petService';
@@ -25,6 +27,8 @@ interface EditPetDialogProps {
 }
 
 const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditPetDialogProps) => {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState({
     name: '',
     breed: '',
@@ -159,7 +163,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
 
   return (
     <>
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
         <DialogTitle>
           <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
             {pet?.name}'s Profile
@@ -257,17 +261,18 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
+        <DialogActions sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 3 }, pb: 2, flexWrap: 'wrap', gap: 1 }}>
           <Button
             onClick={handleDeleteClick}
             color="error"
             disabled={saving || deleting}
             variant="outlined"
+            sx={{ order: { xs: 3, sm: 1 }, width: { xs: '100%', sm: 'auto' } }}
           >
             Remove Pet
           </Button>
-          <Box>
-            <Button onClick={handleClose} disabled={saving || deleting} sx={{ mr: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, order: { xs: 1, sm: 2 }, width: { xs: '100%', sm: 'auto' } }}>
+            <Button onClick={handleClose} disabled={saving || deleting} sx={{ flex: { xs: 1, sm: 'none' } }}>
               Cancel
             </Button>
             <Button
@@ -275,6 +280,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
               variant="contained"
               disabled={saving || deleting}
               size="large"
+              sx={{ flex: { xs: 1, sm: 'none' } }}
             >
               {saving ? <CircularProgress size={24} /> : 'Save Changes'}
             </Button>

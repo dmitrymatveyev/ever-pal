@@ -10,6 +10,8 @@ import {
   CircularProgress,
   Alert,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -27,6 +29,8 @@ interface EditHealthLogDialogProps {
 }
 
 const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHealthLogDialogProps) => {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
@@ -130,7 +134,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
       <DialogTitle>
         <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
           Update Journal Entry

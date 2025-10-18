@@ -97,12 +97,13 @@ const QuickLogTags = ({ selectedTags, onTagToggle, maxTags }: QuickLogTagsProps)
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <span style={{ fontSize: '1.1rem' }}>{tag.icon}</span>
-                      <span>{tag.label}</span>
+                      <span style={{ fontSize: '0.875rem' }}>{tag.label}</span>
                     </Box>
                   }
                   onClick={() => handleTagClick(tag.label)}
                   color={isSelected ? 'primary' : 'default'}
                   variant={isSelected ? 'filled' : 'outlined'}
+                  size="small"
                   sx={{
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',

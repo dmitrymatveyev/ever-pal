@@ -313,7 +313,7 @@ const HealthJournal = () => {
       {selectedPet && (
         <Paper
           sx={{
-            p: 4,
+            p: { xs: 2, sm: 3, md: 4 },
             mb: 3,
             background: (theme) =>
               theme.palette.mode === 'dark'
@@ -330,27 +330,27 @@ const HealthJournal = () => {
             size="small"
             sx={{
               position: 'absolute',
-              top: 16,
-              right: 16,
+              top: { xs: 8, sm: 16 },
+              right: { xs: 8, sm: 16 },
               bgcolor: 'background.paper',
               '&:hover': {
                 bgcolor: 'action.hover',
               },
             }}
           >
-            <Settings />
+            <Settings fontSize="small" />
           </IconButton>
 
           {/* Pet Avatar - Prominent */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 2, sm: 3 } }}>
             {(selectedPet.photoBase64 || selectedPet.photoUrl) ? (
               <Avatar
                 src={selectedPet.photoBase64 || selectedPet.photoUrl}
                 alt={selectedPet.name}
                 sx={{
-                  width: 120,
-                  height: 120,
-                  border: 4,
+                  width: { xs: 80, sm: 100, md: 120 },
+                  height: { xs: 80, sm: 100, md: 120 },
+                  border: { xs: 3, sm: 4 },
                   borderColor: 'primary.light',
                   boxShadow: 3,
                 }}
@@ -358,22 +358,22 @@ const HealthJournal = () => {
             ) : (
               <Avatar
                 sx={{
-                  width: 120,
-                  height: 120,
+                  width: { xs: 80, sm: 100, md: 120 },
+                  height: { xs: 80, sm: 100, md: 120 },
                   bgcolor: 'primary.main',
-                  border: 4,
+                  border: { xs: 3, sm: 4 },
                   borderColor: 'primary.light',
                   boxShadow: 3,
                 }}
               >
-                <Pets sx={{ fontSize: 60 }} />
+                <Pets sx={{ fontSize: { xs: 40, sm: 50, md: 60 } }} />
               </Avatar>
             )}
-            <Typography variant="h4" sx={{ mt: 2, fontWeight: 700 }}>
+            <Typography variant="h4" sx={{ mt: { xs: 1.5, sm: 2 }, fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
               {selectedPet.name}
             </Typography>
             {(selectedPet.breed || selectedPet.age) && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: { xs: '0.8rem', sm: '0.875rem' }, textAlign: 'center', px: 1 }}>
                 {selectedPet.breed}
                 {selectedPet.breed && selectedPet.age && ' • '}
                 {selectedPet.age && `${selectedPet.age} years old`}
@@ -424,12 +424,12 @@ const HealthJournal = () => {
       {/* Journal Section */}
       <Box>
         {/* Header with CTA */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 3, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
               Journal
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
               Track {selectedPet?.name}'s daily journey
             </Typography>
           </Box>
@@ -440,6 +440,7 @@ const HealthJournal = () => {
             onClick={() => setAddLogDialogOpen(true)}
             disabled={!selectedPetId}
             sx={{
+              width: { xs: '100%', sm: 'auto' },
               boxShadow: 2,
               '&:hover': {
                 boxShadow: 4,
@@ -451,18 +452,18 @@ const HealthJournal = () => {
         </Box>
 
         {loadingLogs ? (
-          <Paper sx={{ p: 6 }}>
+          <Paper sx={{ p: { xs: 3, sm: 4, md: 6 } }}>
             <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
               <CircularProgress />
               <Typography color="text.secondary">Loading journal entries...</Typography>
             </Box>
           </Paper>
         ) : healthLogs.length === 0 ? (
-          <Paper sx={{ p: 6, textAlign: 'center' }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+          <Paper sx={{ p: { xs: 3, sm: 4, md: 6 }, textAlign: 'center' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
               Start {selectedPet?.name}'s health journal
             </Typography>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
+            <Typography color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
               Keep track of daily observations, symptoms, and special moments.
               It helps you notice patterns and share updates with your vet.
             </Typography>
@@ -471,15 +472,16 @@ const HealthJournal = () => {
               size="large"
               startIcon={<Add />}
               onClick={() => setAddLogDialogOpen(true)}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
               Add First Entry
             </Button>
           </Paper>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3 } }}>
             {/* Timeline View */}
             {Object.entries(groupedLogs).map(([dateHeader, logs]) => (
-              <Paper key={dateHeader} sx={{ p: 3 }}>
+              <Paper key={dateHeader} sx={{ p: { xs: 2, sm: 3 } }}>
                 {/* Date Header */}
                 <Typography
                   variant="subtitle2"

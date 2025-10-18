@@ -83,12 +83,12 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
         <Box
           sx={{
             display: 'flex',
             justifyContent: 'center',
-            mb: 4,
+            mb: { xs: 2, sm: 3, md: 4 },
           }}
         >
           <Box
@@ -97,7 +97,7 @@ function App() {
             alt="EverPal Logo"
             sx={{
               maxWidth: '100%',
-              maxHeight: { xs: 120, sm: 150, md: 200 },
+              maxHeight: { xs: 80, sm: 120, md: 150 },
               width: 'auto',
               height: 'auto',
             }}
