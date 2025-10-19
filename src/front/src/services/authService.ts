@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config';
+import { apiClient } from '../utils/apiClientSingleton';
 
 interface AuthResponse {
   token: string;
@@ -9,13 +10,7 @@ interface AuthResponse {
 }
 
 export const getAnonymousAuth = async (): Promise<AuthResponse> => {
-  const response = await fetch(`${API_BASE_URL}/anonymous`, {
+  return apiClient.fetch<AuthResponse>(`${API_BASE_URL}/anonymous`, {
     method: 'POST',
   });
-  
-  if (!response.ok) {
-    throw new Error('Failed to get anonymous auth');
-  }
-  
-  return response.json();
 };

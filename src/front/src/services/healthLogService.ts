@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config';
+import { apiClient } from '../utils/apiClientSingleton';
 
 export interface HealthLog {
   id: string;
@@ -31,19 +32,13 @@ export const getHealthLogs = async (
 
   const url = `${API_BASE_URL}/healthlogs/pet/${petId}?limit=${limit}&offset=${offset}`;
 
-  const response = await fetch(url, {
+  return apiClient.fetch<HealthLog[]>(url, {
     method: 'GET',
     headers: {
       'Authorization': authHeader,
       'Content-Type': 'application/json',
     },
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch health logs');
-  }
-
-  return response.json();
 };
 
 export const createHealthLog = async (
@@ -53,7 +48,7 @@ export const createHealthLog = async (
 ): Promise<HealthLog> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE_URL}/healthlogs`, {
+  return apiClient.fetch<HealthLog>(`${API_BASE_URL}/healthlogs`, {
     method: 'POST',
     headers: {
       'Authorization': authHeader,
@@ -61,12 +56,6 @@ export const createHealthLog = async (
     },
     body: JSON.stringify(logData),
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to create health log');
-  }
-
-  return response.json();
 };
 
 export const updateHealthLog = async (
@@ -77,7 +66,7 @@ export const updateHealthLog = async (
 ): Promise<HealthLog> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE_URL}/healthlogs/${logId}`, {
+  return apiClient.fetch<HealthLog>(`${API_BASE_URL}/healthlogs/${logId}`, {
     method: 'PUT',
     headers: {
       'Authorization': authHeader,
@@ -85,12 +74,6 @@ export const updateHealthLog = async (
     },
     body: JSON.stringify(logData),
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to update health log');
-  }
-
-  return response.json();
 };
 
 export const deleteHealthLog = async (
@@ -100,15 +83,11 @@ export const deleteHealthLog = async (
 ): Promise<void> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE_URL}/healthlogs/${logId}`, {
+  return apiClient.fetch<void>(`${API_BASE_URL}/healthlogs/${logId}`, {
     method: 'DELETE',
     headers: {
       'Authorization': authHeader,
       'Content-Type': 'application/json',
     },
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to delete health log');
-  }
 };

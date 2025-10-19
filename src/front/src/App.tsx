@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 import HealthJournal from './pages/HealthJournal';
 import AddFirstPet from './pages/AddFirstPet';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ColdStartProvider } from './contexts/ColdStartContext';
+import ColdStartIndicator from './components/ColdStartIndicator';
 
 function App() {
   // Detect system preference for dark mode
@@ -81,51 +83,54 @@ function App() {
   );
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            mb: { xs: 2, sm: 3, md: 4 },
-          }}
-        >
+    <ColdStartProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <ColdStartIndicator />
+        <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
           <Box
-            component="img"
-            src="/logo.png"
-            alt="EverPal Logo"
             sx={{
-              maxWidth: '100%',
-              maxHeight: { xs: 80, sm: 120, md: 150 },
-              width: 'auto',
-              height: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              mb: { xs: 2, sm: 3, md: 4 },
             }}
-          />
-        </Box>
-        <Router>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <HealthJournal />
-                </ProtectedRoute>
-              }
+          >
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="EverPal Logo"
+              sx={{
+                maxWidth: '100%',
+                maxHeight: { xs: 80, sm: 120, md: 150 },
+                width: 'auto',
+                height: 'auto',
+              }}
             />
-            <Route
-              path="/add-first-pet"
-              element={
-                <ProtectedRoute>
-                  <AddFirstPet />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
-      </Container>
-    </ThemeProvider>
+          </Box>
+          <Router>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <HealthJournal />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/add-first-pet"
+                element={
+                  <ProtectedRoute>
+                    <AddFirstPet />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </Container>
+      </ThemeProvider>
+    </ColdStartProvider>
   );
 }
 

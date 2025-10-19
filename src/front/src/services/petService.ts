@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../config';
+import { apiClient } from '../utils/apiClientSingleton';
 
 export interface Pet {
   id: string;
@@ -33,20 +34,14 @@ export interface UpdatePetRequest {
 
 export const getPets = async (token: string, isAnonymous: boolean = false): Promise<Pet[]> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
-  
-  const response = await fetch(`${API_BASE_URL}/pets`, {
+
+  return apiClient.fetch<Pet[]>(`${API_BASE_URL}/pets`, {
     method: 'GET',
     headers: {
       'Authorization': authHeader,
       'Content-Type': 'application/json',
     },
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch pets');
-  }
-
-  return response.json();
 };
 
 export const createPet = async (
@@ -55,8 +50,8 @@ export const createPet = async (
   isAnonymous: boolean = false
 ): Promise<Pet> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
-  
-  const response = await fetch(`${API_BASE_URL}/pets`, {
+
+  return apiClient.fetch<Pet>(`${API_BASE_URL}/pets`, {
     method: 'POST',
     headers: {
       'Authorization': authHeader,
@@ -64,12 +59,6 @@ export const createPet = async (
     },
     body: JSON.stringify(petData),
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to create pet');
-  }
-
-  return response.json();
 };
 
 export const updatePet = async (
@@ -79,8 +68,8 @@ export const updatePet = async (
   isAnonymous: boolean = false
 ): Promise<Pet> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
-  
-  const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
+
+  return apiClient.fetch<Pet>(`${API_BASE_URL}/pets/${petId}`, {
     method: 'PUT',
     headers: {
       'Authorization': authHeader,
@@ -88,12 +77,6 @@ export const updatePet = async (
     },
     body: JSON.stringify(petData),
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to update pet');
-  }
-
-  return response.json();
 };
 
 export const deletePet = async (
@@ -102,16 +85,12 @@ export const deletePet = async (
   isAnonymous: boolean = false
 ): Promise<void> => {
   const authHeader = isAnonymous ? `Anonymous ${token}` : `Bearer ${token}`;
-  
-  const response = await fetch(`${API_BASE_URL}/pets/${petId}`, {
+
+  return apiClient.fetch<void>(`${API_BASE_URL}/pets/${petId}`, {
     method: 'DELETE',
     headers: {
       'Authorization': authHeader,
       'Content-Type': 'application/json',
     },
   });
-
-  if (!response.ok) {
-    throw new Error('Failed to delete pet');
-  }
 };
