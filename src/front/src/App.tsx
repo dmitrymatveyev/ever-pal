@@ -6,6 +6,7 @@ import AddFirstPet from './pages/AddFirstPet';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ColdStartProvider } from './contexts/ColdStartContext';
 import ColdStartIndicator from './components/ColdStartIndicator';
+import OfflineIndicator from './components/OfflineIndicator';
 
 function App() {
   // Detect system preference for dark mode
@@ -87,6 +88,7 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <ColdStartIndicator />
+        <OfflineIndicator />
         <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
           <Box
             sx={{
