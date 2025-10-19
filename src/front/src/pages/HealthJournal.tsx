@@ -423,33 +423,35 @@ const HealthJournal = () => {
 
       {/* Journal Section */}
       <Box>
-        {/* Header with CTA */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 3, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-              Journal
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-              Track {selectedPet?.name}'s daily journey
-            </Typography>
+        {/* Header with CTA - Only show when there are entries */}
+        {!loadingLogs && healthLogs.length > 0 && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 3, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+                Journal
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                Track {selectedPet?.name}'s daily journey
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Add />}
+              onClick={() => setAddLogDialogOpen(true)}
+              disabled={!selectedPetId}
+              sx={{
+                width: { xs: '100%', sm: 'auto' },
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4,
+                },
+              }}
+            >
+              Add Entry
+            </Button>
           </Box>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<Add />}
-            onClick={() => setAddLogDialogOpen(true)}
-            disabled={!selectedPetId}
-            sx={{
-              width: { xs: '100%', sm: 'auto' },
-              boxShadow: 2,
-              '&:hover': {
-                boxShadow: 4,
-              },
-            }}
-          >
-            Add Entry
-          </Button>
-        </Box>
+        )}
 
         {loadingLogs ? (
           <Paper sx={{ p: { xs: 3, sm: 4, md: 6 } }}>
