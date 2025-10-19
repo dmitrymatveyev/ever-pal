@@ -8,8 +8,13 @@ import {
   TextField,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  Avatar,
+  Typography,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
+import { Pets, PhotoCamera } from '@mui/icons-material';
 import { createPet, type CreatePetRequest } from '../services/petService';
 import { processImage } from '../utils/imageUtils';
 
@@ -20,6 +25,8 @@ interface AddPetDialogProps {
 }
 
 const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState<CreatePetRequest>({
     name: '',
     breed: '',
@@ -118,17 +125,69 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add New Pet</DialogTitle>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
+      <DialogTitle>
+        <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
+          Add Your Companion
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Tell us about your furry friend
+        </Typography>
+      </DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Photo Upload Section */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            {formData.photoBase64 ? (
+              <Avatar
+                src={formData.photoBase64}
+                sx={{
+                  width: { xs: 100, sm: 120 },
+                  height: { xs: 100, sm: 120 },
+                  border: 3,
+                  borderColor: 'primary.main'
+                }}
+              />
+            ) : (
+              <Avatar
+                sx={{
+                  width: { xs: 100, sm: 120 },
+                  height: { xs: 100, sm: 120 },
+                  bgcolor: 'primary.main',
+                  border: 3,
+                  borderColor: 'primary.main'
+                }}
+              >
+                <Pets sx={{ fontSize: { xs: 50, sm: 60 } }} />
+              </Avatar>
+            )}
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<PhotoCamera />}
+              disabled={saving}
+              sx={{ borderRadius: 3 }}
+            >
+              {photoFileName ? 'Change Photo' : 'Add Photo'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handlePhotoChange}
+              />
+            </Button>
+          </Box>
+
+          {/* Form Fields */}
           <TextField
             label="Pet Name"
+            placeholder="e.g., Max"
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
             required
@@ -137,6 +196,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
           />
           <TextField
             label="Breed"
+            placeholder="e.g., Golden Retriever"
             value={formData.breed}
             onChange={(e) => handleChange('breed', e.target.value)}
             fullWidth
@@ -144,6 +204,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
           />
           <TextField
             label="Age (years)"
+            placeholder="e.g., 8"
             type="number"
             value={formData.age || ''}
             onChange={(e) => handleChange('age', e.target.value)}
@@ -153,6 +214,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
           />
           <TextField
             label="Weight (kg)"
+            placeholder="e.g., 25.5"
             type="number"
             value={formData.weight || ''}
             onChange={(e) => handleChange('weight', e.target.value)}
@@ -160,38 +222,27 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
             fullWidth
             disabled={saving}
           />
-          <Box>
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-              disabled={saving}
-            >
-              {photoFileName || 'Upload Photo'}
-              <input
-                ref={fileInputRef}
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handlePhotoChange}
-              />
-            </Button>
-            {photoFileName && (
-              <Box sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
-                Selected: {photoFileName}
-              </Box>
-            )}
-          </Box>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={saving}>
+      <DialogActions sx={{ px: 3, pb: 2, gap: 1, flexWrap: 'wrap' }}>
+        <Button
+          onClick={handleClose}
+          disabled={saving}
+          sx={{
+            flex: { xs: 1, sm: 'none' },
+            order: { xs: 1, sm: 1 }
+          }}
+        >
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={saving}
+          sx={{
+            flex: { xs: 1, sm: 'none' },
+            order: { xs: 2, sm: 2 }
+          }}
         >
           {saving ? <CircularProgress size={24} /> : 'Add Pet'}
         </Button>
