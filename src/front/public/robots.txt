@@ -1,0 +1,6 @@
+# EverPal - Senior Pet Care Journal
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://everpal.app/sitemap.xml
