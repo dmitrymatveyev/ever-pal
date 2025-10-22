@@ -1,7 +1,7 @@
 {
-  "name": "EverPal - Senior Pet Care Journal",
+  "name": "EverPal - Pet Health Journal",
   "short_name": "EverPal",
-  "description": "Health journal and care companion for senior pets (7+ years old). Track daily observations, symptoms, and special moments with emoji tags and timeline view.",
+  "description": "Track your pet's chronic conditions, symptoms, and daily wellness. Quick emoji tags + timeline view for cats, dogs, and all pets with health issues.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F9F7F4",
