@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { SelectChangeEvent } from '@mui/material';
 import {
   Typography,
@@ -33,6 +33,7 @@ interface UserData {
 
 const HealthJournal = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>('');
@@ -40,12 +41,17 @@ const HealthJournal = () => {
   const [loading, setLoading] = useState(true);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [addPetDialogOpen, setAddPetDialogOpen] = useState(false);
-  const [addLogDialogOpen, setAddLogDialogOpen] = useState(false);
-  const [editLogDialogOpen, setEditLogDialogOpen] = useState(false);
-  const [editPetDialogOpen, setEditPetDialogOpen] = useState(false);
   const [selectedHealthLog, setSelectedHealthLog] = useState<HealthLog | null>(null);
   const [visibleCount, setVisibleCount] = useState(5);
+
+  // Dialog states derived from URL params
+  const dialog = searchParams.get('dialog');
+  const logId = searchParams.get('logId');
+
+  const addPetDialogOpen = dialog === 'add-pet';
+  const addLogDialogOpen = dialog === 'add-log';
+  const editLogDialogOpen = dialog === 'edit-log';
+  const editPetDialogOpen = dialog === 'edit-pet';
 
   useEffect(() => {
     const initializeData = async () => {
@@ -91,6 +97,16 @@ const HealthJournal = () => {
     initializeData();
   }, [navigate]);
 
+  // Effect to select health log when edit dialog is opened via URL
+  useEffect(() => {
+    if (editLogDialogOpen && logId && healthLogs.length > 0) {
+      const log = healthLogs.find(l => l.id === logId);
+      if (log) {
+        setSelectedHealthLog(log);
+      }
+    }
+  }, [editLogDialogOpen, logId, healthLogs]);
+
   useEffect(() => {
     const fetchHealthLogs = async () => {
       if (!selectedPetId || !userData) {
@@ -116,7 +132,7 @@ const HealthJournal = () => {
   const handlePetChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     if (value === 'add-new') {
-      setAddPetDialogOpen(true);
+      setSearchParams({ dialog: 'add-pet' });
     } else {
       setSelectedPetId(value);
       setVisibleCount(5); // Reset visible count when switching pets
@@ -158,7 +174,7 @@ const HealthJournal = () => {
 
   const handleEditClick = (log: HealthLog) => {
     setSelectedHealthLog(log);
-    setEditLogDialogOpen(true);
+    setSearchParams({ dialog: 'edit-log', logId: log.id });
   };
 
   const handleLogUpdated = async () => {
@@ -291,6 +307,20 @@ const HealthJournal = () => {
     }
   };
 
+  // Helper function to close dialogs
+  const closeDialog = () => {
+    setSearchParams({});
+  };
+
+  // Helper functions to open dialogs
+  const openAddLogDialog = () => {
+    setSearchParams({ dialog: 'add-log' });
+  };
+
+  const openEditPetDialog = () => {
+    setSearchParams({ dialog: 'edit-pet' });
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
@@ -325,7 +355,7 @@ const HealthJournal = () => {
         >
           {/* Settings Icon */}
           <IconButton
-            onClick={() => setEditPetDialogOpen(true)}
+            onClick={openEditPetDialog}
             aria-label="edit pet"
             size="small"
             sx={{
@@ -438,7 +468,7 @@ const HealthJournal = () => {
               variant="contained"
               size="large"
               startIcon={<Add />}
-              onClick={() => setAddLogDialogOpen(true)}
+              onClick={openAddLogDialog}
               disabled={!selectedPetId}
               sx={{
                 width: { xs: '100%', sm: 'auto' },
@@ -473,7 +503,7 @@ const HealthJournal = () => {
               variant="contained"
               size="large"
               startIcon={<Add />}
-              onClick={() => setAddLogDialogOpen(true)}
+              onClick={openAddLogDialog}
               sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
               Add First Entry
@@ -569,14 +599,14 @@ const HealthJournal = () => {
       {/* Dialogs */}
       <AddPetDialog
         open={addPetDialogOpen}
-        onClose={() => setAddPetDialogOpen(false)}
+        onClose={closeDialog}
         onPetAdded={handlePetAdded}
       />
 
       {selectedPetId && (
         <AddLogEventDialog
           open={addLogDialogOpen}
-          onClose={() => setAddLogDialogOpen(false)}
+          onClose={closeDialog}
           petId={selectedPetId}
           onLogAdded={handleLogAdded}
         />
@@ -584,14 +614,14 @@ const HealthJournal = () => {
 
       <EditHealthLogDialog
         open={editLogDialogOpen}
-        onClose={() => setEditLogDialogOpen(false)}
+        onClose={closeDialog}
         healthLog={selectedHealthLog}
         onLogUpdated={handleLogUpdated}
       />
 
       <EditPetDialog
         open={editPetDialogOpen}
-        onClose={() => setEditPetDialogOpen(false)}
+        onClose={closeDialog}
         pet={selectedPet || null}
         onPetUpdated={handlePetUpdated}
         onPetDeleted={handlePetDeleted}
