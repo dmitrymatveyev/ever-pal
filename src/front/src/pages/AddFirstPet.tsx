@@ -126,14 +126,14 @@ const AddFirstPet = () => {
             disabled={saving}
           />
           <TextField
-            label="Breed"
+            label="Breed (Optional)"
             value={formData.breed}
             onChange={(e) => handleChange('breed', e.target.value)}
             fullWidth
             disabled={saving}
           />
           <TextField
-            label="Age (years)"
+            label="Age (Optional)"
             type="number"
             value={formData.age || ''}
             onChange={(e) => handleChange('age', e.target.value)}
@@ -142,7 +142,7 @@ const AddFirstPet = () => {
             disabled={saving}
           />
           <TextField
-            label="Weight (kg)"
+            label="Weight (Optional)"
             type="number"
             value={formData.weight || ''}
             onChange={(e) => handleChange('weight', e.target.value)}
@@ -157,7 +157,7 @@ const AddFirstPet = () => {
               fullWidth
               disabled={saving}
             >
-              {photoFileName || 'Upload Photo'}
+              {photoFileName || 'Upload Photo (Optional)'}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -182,6 +182,18 @@ const AddFirstPet = () => {
           >
             {saving ? <CircularProgress size={24} /> : 'Add Pet & Continue'}
           </Button>
+
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 2,
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontSize: '0.875rem'
+            }}
+          >
+            Only name is required • Add details anytime
+          </Typography>
         </Box>
       </Paper>
     </Box>
