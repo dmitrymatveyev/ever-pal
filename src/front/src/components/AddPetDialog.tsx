@@ -213,8 +213,8 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
             disabled={saving}
           />
           <TextField
-            label="Weight (kg)"
-            placeholder="e.g., 25.5"
+            label="Weight"
+            placeholder="e.g., 12 lbs or 5.5 kg"
             type="number"
             value={formData.weight || ''}
             onChange={(e) => handleChange('weight', e.target.value)}

@@ -200,6 +200,7 @@ const AddFirstPet = () => {
           />
           <TextField
             label="Weight (Optional)"
+            placeholder="e.g., 12 lbs or 5.5 kg"
             type="number"
             value={formData.weight || ''}
             onChange={(e) => handleChange('weight', e.target.value)}

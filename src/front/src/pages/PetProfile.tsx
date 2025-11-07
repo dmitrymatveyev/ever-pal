@@ -281,7 +281,7 @@ const PetProfile = () => {
               />
             ) : (
               <Typography variant="body1">
-                {pet.weight !== null && pet.weight !== undefined ? `${pet.weight} kg` : 'Not specified'}
+                {pet.weight !== null && pet.weight !== undefined ? pet.weight : 'Not specified'}
               </Typography>
             )}
           </Grid>
