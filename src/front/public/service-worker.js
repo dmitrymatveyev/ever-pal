@@ -1,7 +1,7 @@
 // EverPal Service Worker - Offline-First Caching Strategy
 // Version 1.0
 
-const CACHE_NAME = 'everpal-v1.2.1';
+const CACHE_NAME = 'everpal-v1.3.1';
 const API_CACHE_NAME = 'everpal-api-v1';
 
 // Static assets to cache immediately
