@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Typography,
@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { createPet, type CreatePetRequest } from '../services/petService';
 import { processImage } from '../utils/imageUtils';
+import { trackEvent, trackPageView, trackFormInteraction, trackFormSubmit } from '../utils/analytics';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
@@ -25,8 +26,33 @@ const AddFirstPet = () => {
   const [error, setError] = useState<string | null>(null);
   const [photoFileName, setPhotoFileName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pageLoadTime = useRef<Date>(new Date());
+
+  // Track page view on mount
+  useEffect(() => {
+    trackPageView('/add-first-pet');
+    trackEvent('onboarding_started', { timestamp: new Date().toISOString() });
+
+    // Track time spent on page when user leaves
+    return () => {
+      const timeSpent = Math.floor((new Date().getTime() - pageLoadTime.current.getTime()) / 1000);
+      trackEvent('onboarding_abandoned', {
+        timeSpentSeconds: timeSpent,
+        petNameFilled: !!formData.name,
+        breedFilled: !!formData.breed,
+        ageFilled: !!formData.age,
+        weightFilled: !!formData.weight,
+        photoUploaded: !!formData.photoBase64
+      });
+    };
+  }, [formData]);
 
   const handleChange = (field: keyof CreatePetRequest, value: string) => {
+    // Track field interaction (only once per field)
+    if (!formData[field]) {
+      trackFormInteraction('add_first_pet', field, 'started_filling');
+    }
+
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -39,8 +65,11 @@ const AddFirstPet = () => {
       return;
     }
 
+    trackFormInteraction('add_first_pet', 'photo', 'upload_attempted');
+
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file');
+      trackEvent('photo_upload_failed', { reason: 'invalid_file_type' });
       return;
     }
 
@@ -52,15 +81,26 @@ const AddFirstPet = () => {
       }));
       setPhotoFileName(file.name);
       setError(null);
+      trackFormInteraction('add_first_pet', 'photo', 'upload_success');
     } catch (err) {
       console.error('Failed to process image:', err);
       setError('Failed to process image. Please try a different image.');
+      trackEvent('photo_upload_failed', { reason: 'processing_error' });
     }
   };
 
   const handleSubmit = async () => {
+    trackEvent('add_pet_button_clicked', {
+      petNameFilled: !!formData.name,
+      breedFilled: !!formData.breed,
+      ageFilled: !!formData.age,
+      weightFilled: !!formData.weight,
+      photoUploaded: !!formData.photoBase64
+    });
+
     if (!formData.name.trim()) {
       setError('Pet name is required');
+      trackFormSubmit('add_first_pet', false, 'validation_failed_no_name');
       return;
     }
 
@@ -81,11 +121,25 @@ const AddFirstPet = () => {
 
       await createPet(userData.token, petData, userData.isAnonymous);
 
+      // Track successful pet creation
+      trackFormSubmit('add_first_pet', true);
+      trackEvent('pet_created_successfully', {
+        hasBreed: !!petData.breed,
+        hasAge: !!petData.age,
+        hasWeight: !!petData.weight,
+        hasPhoto: !!petData.photoBase64,
+        timeSpentSeconds: Math.floor((new Date().getTime() - pageLoadTime.current.getTime()) / 1000)
+      });
+
       // Navigate to health journal after adding first pet
       navigate('/');
     } catch (err) {
       console.error('Failed to create pet:', err);
       setError('Failed to create pet. Please try again.');
+      trackFormSubmit('add_first_pet', false, 'api_error');
+      trackEvent('pet_creation_failed', {
+        error: err instanceof Error ? err.message : 'unknown_error'
+      });
     } finally {
       setSaving(false);
     }
@@ -121,6 +175,7 @@ const AddFirstPet = () => {
             label="Pet Name"
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
+            onFocus={() => trackFormInteraction('add_first_pet', 'name', 'focused')}
             required
             fullWidth
             disabled={saving}
@@ -129,6 +184,7 @@ const AddFirstPet = () => {
             label="Breed (Optional)"
             value={formData.breed}
             onChange={(e) => handleChange('breed', e.target.value)}
+            onFocus={() => trackFormInteraction('add_first_pet', 'breed', 'focused')}
             fullWidth
             disabled={saving}
           />
@@ -137,6 +193,7 @@ const AddFirstPet = () => {
             type="number"
             value={formData.age || ''}
             onChange={(e) => handleChange('age', e.target.value)}
+            onFocus={() => trackFormInteraction('add_first_pet', 'age', 'focused')}
             inputProps={{ min: 0 }}
             fullWidth
             disabled={saving}
@@ -146,6 +203,7 @@ const AddFirstPet = () => {
             type="number"
             value={formData.weight || ''}
             onChange={(e) => handleChange('weight', e.target.value)}
+            onFocus={() => trackFormInteraction('add_first_pet', 'weight', 'focused')}
             inputProps={{ min: 0, step: 0.1 }}
             fullWidth
             disabled={saving}
