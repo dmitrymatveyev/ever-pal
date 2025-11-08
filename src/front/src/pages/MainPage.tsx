@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { ExpandMore, ExpandLess, Pets, Logout } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
+import { resetUser } from '../utils/analytics';
 
 interface UserData {
   email: string;
@@ -61,6 +62,8 @@ const MainPage = () => {
   };
 
   const handleLogout = () => {
+    // Reset PostHog user identity
+    resetUser();
     // Remove user data and redirect to main
     localStorage.removeItem('user');
     navigate('/main');
