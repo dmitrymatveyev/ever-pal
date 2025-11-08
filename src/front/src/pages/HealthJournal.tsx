@@ -16,7 +16,8 @@ import {
   Divider,
   IconButton,
   Avatar,
-  Chip
+  Chip,
+  Snackbar
 } from '@mui/material';
 import { Add, Pets, Edit, Delete, Settings } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
@@ -26,6 +27,8 @@ import AddLogEventDialog from '../components/AddLogEventDialog';
 import EditHealthLogDialog from '../components/EditHealthLogDialog';
 import EditPetDialog from '../components/EditPetDialog';
 import { parseEntryTags } from '../utils/parseEntryTags';
+import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../utils/demoData';
+import { trackEvent } from '../utils/analytics';
 
 interface UserData {
   email: string;
@@ -45,6 +48,8 @@ const HealthJournal = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedHealthLog, setSelectedHealthLog] = useState<HealthLog | null>(null);
   const [visibleCount, setVisibleCount] = useState(5);
+  const [demoMode, setDemoMode] = useState(false);
+  const [demoModeSnackbar, setDemoModeSnackbar] = useState(false);
 
   // Dialog states derived from URL params
   const dialog = searchParams.get('dialog');
@@ -58,6 +63,22 @@ const HealthJournal = () => {
   useEffect(() => {
     const initializeData = async () => {
       try {
+        // Check for demo mode first
+        if (isDemoMode()) {
+          setDemoMode(true);
+          const demoPet = getDemoPet();
+          setPets([demoPet]);
+          setSelectedPetId(demoPet.id);
+          setHealthLogs(getDemoHealthLogs());
+          setLoading(false);
+
+          // Track demo mode session
+          trackEvent('demo_mode_session_started', {
+            timestamp: new Date().toISOString()
+          });
+          return;
+        }
+
         const userStr = localStorage.getItem('user');
         if (!userStr) {
           setError('No user data found');
@@ -134,6 +155,11 @@ const HealthJournal = () => {
   const handlePetChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     if (value === 'add-new') {
+      if (demoMode) {
+        setDemoModeSnackbar(true);
+        trackEvent('demo_mode_action_blocked', { action: 'add_pet' });
+        return;
+      }
       setSearchParams({ dialog: 'add-pet' });
     } else {
       setSelectedPetId(value);
@@ -175,6 +201,11 @@ const HealthJournal = () => {
   };
 
   const handleEditClick = (log: HealthLog) => {
+    if (demoMode) {
+      setDemoModeSnackbar(true);
+      trackEvent('demo_mode_action_blocked', { action: 'edit_log' });
+      return;
+    }
     setSelectedHealthLog(log);
     setSearchParams({ dialog: 'edit-log', logId: log.id });
   };
@@ -195,6 +226,12 @@ const HealthJournal = () => {
   };
 
   const handleDeleteClick = async (logId: string) => {
+    if (demoMode) {
+      setDemoModeSnackbar(true);
+      trackEvent('demo_mode_action_blocked', { action: 'delete_log' });
+      return;
+    }
+
     if (!userData || !selectedPetId) {
       return;
     }
@@ -316,10 +353,20 @@ const HealthJournal = () => {
 
   // Helper functions to open dialogs
   const openAddLogDialog = () => {
+    if (demoMode) {
+      setDemoModeSnackbar(true);
+      trackEvent('demo_mode_action_blocked', { action: 'add_log' });
+      return;
+    }
     setSearchParams({ dialog: 'add-log' });
   };
 
   const openEditPetDialog = () => {
+    if (demoMode) {
+      setDemoModeSnackbar(true);
+      trackEvent('demo_mode_action_blocked', { action: 'edit_pet' });
+      return;
+    }
     setSearchParams({ dialog: 'edit-pet' });
   };
 
@@ -339,8 +386,54 @@ const HealthJournal = () => {
     );
   }
 
+  const handleExitDemoMode = () => {
+    trackEvent('demo_mode_exited', {
+      timestamp: new Date().toISOString(),
+      action: 'add_pet_clicked'
+    });
+
+    // Exit demo mode and navigate to add pet
+    disableDemoMode();
+    navigate('/add-first-pet');
+  };
+
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+      {/* Demo Mode Banner */}
+      {demoMode && (
+        <Alert
+          severity="info"
+          sx={{
+            mb: 3,
+            alignItems: 'center',
+            '& .MuiAlert-message': {
+              width: '100%'
+            }
+          }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              variant="outlined"
+              onClick={handleExitDemoMode}
+              sx={{
+                whiteSpace: 'nowrap',
+                fontWeight: 600
+              }}
+            >
+              Add Your Pet
+            </Button>
+          }
+        >
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            You're viewing a demo with sample data
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
+            Explore how EverPal works, then add your pet to start tracking for real
+          </Typography>
+        </Alert>
+      )}
+
       {/* Pet Profile Card */}
       {selectedPet && (
         <Paper
@@ -663,6 +756,15 @@ const HealthJournal = () => {
         pet={selectedPet || null}
         onPetUpdated={handlePetUpdated}
         onPetDeleted={handlePetDeleted}
+      />
+
+      {/* Demo Mode Snackbar */}
+      <Snackbar
+        open={demoModeSnackbar}
+        autoHideDuration={4000}
+        onClose={() => setDemoModeSnackbar(false)}
+        message="This is a demo. Click 'Add Your Pet' above to start tracking for real"
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Box>
   );

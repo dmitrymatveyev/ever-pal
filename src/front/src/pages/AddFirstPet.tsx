@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { createPet, type CreatePetRequest } from '../services/petService';
 import { trackEvent, trackPageView, trackFormInteraction, trackFormSubmit } from '../utils/analytics';
+import { enableDemoMode } from '../utils/demoData';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
@@ -103,6 +104,17 @@ const AddFirstPet = () => {
     }
   };
 
+  const handleSkip = () => {
+    trackEvent('onboarding_skipped', {
+      timestamp: new Date().toISOString(),
+      timeSpentSeconds: Math.floor((new Date().getTime() - pageLoadTime.current.getTime()) / 1000)
+    });
+
+    // Enable demo mode and navigate to health journal
+    enableDemoMode();
+    navigate('/');
+  };
+
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto' }}>
       <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -159,6 +171,16 @@ const AddFirstPet = () => {
             sx={{ mt: 2 }}
           >
             {saving ? <CircularProgress size={24} /> : 'Add Pet & Continue'}
+          </Button>
+
+          <Button
+            variant="text"
+            size="medium"
+            onClick={handleSkip}
+            disabled={saving}
+            sx={{ mt: 1 }}
+          >
+            Skip for now - Browse demo
           </Button>
 
           <Typography
