@@ -1,10 +1,18 @@
 import { API_BASE_URL } from '../config';
 import { apiClient } from '../utils/apiClientSingleton';
 
+export interface Tag {
+  id: string;
+  label: string;
+  icon: string;
+  category?: string;
+}
+
 export interface HealthLog {
   id: string;
   petId: string;
   entryText: string;
+  tags: Tag[];
   loggedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -13,11 +21,13 @@ export interface HealthLog {
 export interface CreateHealthLogRequest {
   petId: string;
   entryText: string;
+  tags: Tag[];
   loggedAt?: string;
 }
 
 export interface UpdateHealthLogRequest {
   entryText?: string;
+  tags?: Tag[];
   loggedAt?: string;
 }
 

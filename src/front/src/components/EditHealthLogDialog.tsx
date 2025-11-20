@@ -18,8 +18,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
-import { updateHealthLog, type UpdateHealthLogRequest, type HealthLog } from '../services/healthLogService';
-import QuickLogTags, { SENIOR_PET_TAGS } from './QuickLogTags';
+import { updateHealthLog, type UpdateHealthLogRequest, type HealthLog, type Tag } from '../services/healthLogService';
+import QuickLogTags from './QuickLogTags';
+import { getTags } from '../services/tagService';
 
 interface EditHealthLogDialogProps {
   open: boolean;
@@ -31,34 +32,25 @@ interface EditHealthLogDialogProps {
 const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHealthLogDialogProps) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [selectedTime, setSelectedTime] = useState<Dayjs | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch available tags when dialog opens
+  useEffect(() => {
+    if (open) {
+      getTags().then(tags => setAvailableTags(tags)).catch(err => console.error('Failed to fetch tags:', err));
+    }
+  }, [open]);
+
   useEffect(() => {
     if (healthLog) {
-      // Parse entry text to extract tags and notes
-      const allTagLabels = SENIOR_PET_TAGS.map(t => t.label);
-      const foundTags: string[] = [];
-      let remainingText = healthLog.entryText;
-
-      // Find tags in the entry text
-      allTagLabels.forEach(tagLabel => {
-        if (healthLog.entryText.includes(tagLabel)) {
-          foundTags.push(tagLabel);
-          // Remove tag from remaining text
-          remainingText = remainingText.replace(tagLabel, '').trim();
-        }
-      });
-
-      // Clean up remaining text (remove leading comma/period/spaces)
-      remainingText = remainingText.replace(/^[,.\s]+/, '').trim();
-
-      setSelectedTags(foundTags);
-      setNotes(remainingText);
+      setSelectedTags(healthLog.tags);
+      setNotes(healthLog.entryText);
 
       const loggedAtDate = dayjs(healthLog.loggedAt);
       setSelectedDate(loggedAtDate);
@@ -66,12 +58,15 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
     }
   }, [healthLog]);
 
-  const handleTagToggle = (label: string) => {
-    setSelectedTags(prev =>
-      prev.includes(label)
-        ? prev.filter(t => t !== label)
-        : [...prev, label]
-    );
+  const handleTagToggle = (tag: Tag) => {
+    setSelectedTags(prev => {
+      const isSelected = prev.some(t => t.id === tag.id);
+      if (isSelected) {
+        return prev.filter(t => t.id !== tag.id);
+      } else {
+        return [...prev, tag];
+      }
+    });
   };
 
   const handleSubmit = async () => {
@@ -103,14 +98,9 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
         loggedAtISO = selectedDate.toISOString();
       }
 
-      // Combine tags and notes into entry text
-      const tagText = selectedTags.join(', ');
-      const entryText = notes.trim()
-        ? `${tagText}${tagText ? '. ' : ''}${notes.trim()}`
-        : tagText;
-
       const logData: UpdateHealthLogRequest = {
-        entryText: entryText,
+        entryText: notes.trim(),
+        tags: selectedTags,
         loggedAt: loggedAtISO
       };
 
@@ -194,6 +184,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
               Or pick quick tags (Optional)
             </Typography>
             <QuickLogTags
+              availableTags={availableTags}
               selectedTags={selectedTags}
               onTagToggle={handleTagToggle}
             />

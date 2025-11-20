@@ -1,10 +1,15 @@
 using EverPal.WebApi.Middlewares;
 using EverPal.WebApi.Services;
 using Microsoft.OpenApi.Models;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -50,6 +55,9 @@ builder.Services.AddSingleton<INoteService, NoteService>();
 
 // Register the Health Log Service
 builder.Services.AddSingleton<IHealthLogService, HealthLogService>();
+
+// Register the Tag Service
+builder.Services.AddSingleton<ITagService, TagService>();
 
 builder.Services.AddCors(options =>
 {

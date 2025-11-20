@@ -26,7 +26,6 @@ import AddPetDialog from '../components/AddPetDialog';
 import AddLogEventDialog from '../components/AddLogEventDialog';
 import EditHealthLogDialog from '../components/EditHealthLogDialog';
 import EditPetDialog from '../components/EditPetDialog';
-import { parseEntryTags } from '../utils/parseEntryTags';
 import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../utils/demoData';
 import { trackEvent } from '../utils/analytics';
 
@@ -639,51 +638,44 @@ const HealthJournal = () => {
                       >
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <Box sx={{ flex: 1, pr: 2 }}>
-                            {(() => {
-                              const { tags, notes } = parseEntryTags(log.entryText);
-                              return (
-                                <>
-                                  {/* Display tags as chips */}
-                                  {tags.length > 0 && (
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: notes ? 1 : 0.5 }}>
-                                      {tags.map((tag) => (
-                                        <Chip
-                                          key={tag.label}
-                                          label={
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                              <span style={{ fontSize: '1rem' }}>{tag.icon}</span>
-                                              <span style={{ fontSize: '0.8125rem' }}>{tag.label}</span>
-                                            </Box>
-                                          }
-                                          size="small"
-                                          sx={{
-                                            height: 'auto',
-                                            py: 0.5,
-                                            '& .MuiChip-label': {
-                                              px: 1,
-                                              py: 0.25,
-                                            }
-                                          }}
-                                        />
-                                      ))}
-                                    </Box>
-                                  )}
-                                  {/* Display notes as text */}
-                                  {notes && (
-                                    <Typography variant="body1" sx={{ mb: 0.5 }}>
-                                      {notes}
-                                    </Typography>
-                                  )}
-                                  {/* Display time */}
-                                  <Typography variant="caption" color="text.secondary">
-                                    {new Date(log.loggedAt).toLocaleTimeString('en-US', {
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                  </Typography>
-                                </>
-                              );
-                            })()}
+                            {/* Display tags as chips */}
+                            {log.tags && log.tags.length > 0 && (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: log.entryText ? 1 : 0.5 }}>
+                                {log.tags.map((tag) => (
+                                  <Chip
+                                    key={tag.id}
+                                    label={
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <span style={{ fontSize: '1rem' }}>{tag.icon}</span>
+                                        <span style={{ fontSize: '0.8125rem' }}>{tag.label}</span>
+                                      </Box>
+                                    }
+                                    size="small"
+                                    sx={{
+                                      height: 'auto',
+                                      py: 0.5,
+                                      '& .MuiChip-label': {
+                                        px: 1,
+                                        py: 0.25,
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                            )}
+                            {/* Display notes as text */}
+                            {log.entryText && (
+                              <Typography variant="body1" sx={{ mb: 0.5 }}>
+                                {log.entryText}
+                              </Typography>
+                            )}
+                            {/* Display time */}
+                            <Typography variant="caption" color="text.secondary">
+                              {new Date(log.loggedAt).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
                           </Box>
                           <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
                             <IconButton

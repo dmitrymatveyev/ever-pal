@@ -18,9 +18,10 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
-import { createHealthLog, type CreateHealthLogRequest } from '../services/healthLogService';
+import { createHealthLog, type CreateHealthLogRequest, type Tag } from '../services/healthLogService';
 import QuickLogTags from './QuickLogTags';
 import { getPets } from '../services/petService';
+import { getTags } from '../services/tagService';
 
 interface AddLogEventDialogProps {
   open: boolean;
@@ -32,7 +33,8 @@ interface AddLogEventDialogProps {
 const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDialogProps) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [notes, setNotes] = useState('');
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [selectedTime, setSelectedTime] = useState<Dayjs | null>(dayjs());
@@ -40,10 +42,10 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
   const [error, setError] = useState<string | null>(null);
   const [petName, setPetName] = useState<string>('');
 
-  // Fetch pet name when dialog opens
+  // Fetch pet name and tags when dialog opens
   useEffect(() => {
     if (open && petId) {
-      const fetchPetName = async () => {
+      const fetchData = async () => {
         try {
           const userStr = localStorage.getItem('user');
           const userData = JSON.parse(userStr!);
@@ -52,20 +54,26 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
           if (pet) {
             setPetName(pet.name);
           }
+
+          const tags = await getTags();
+          setAvailableTags(tags);
         } catch (err) {
-          console.error('Failed to fetch pet name:', err);
+          console.error('Failed to fetch data:', err);
         }
       };
-      fetchPetName();
+      fetchData();
     }
   }, [open, petId]);
 
-  const handleTagToggle = (label: string) => {
-    setSelectedTags(prev =>
-      prev.includes(label)
-        ? prev.filter(t => t !== label)
-        : [...prev, label]
-    );
+  const handleTagToggle = (tag: Tag) => {
+    setSelectedTags(prev => {
+      const isSelected = prev.some(t => t.id === tag.id);
+      if (isSelected) {
+        return prev.filter(t => t.id !== tag.id);
+      } else {
+        return [...prev, tag];
+      }
+    });
   };
 
   const handleSubmit = async () => {
@@ -93,15 +101,10 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
         loggedAtISO = selectedDate.toISOString();
       }
 
-      // Combine tags and notes into entry text
-      const tagText = selectedTags.join(', ');
-      const entryText = notes.trim()
-        ? `${tagText}${tagText ? '. ' : ''}${notes.trim()}`
-        : tagText;
-
       const logData: CreateHealthLogRequest = {
         petId: petId,
-        entryText: entryText,
+        entryText: notes.trim(),
+        tags: selectedTags,
         loggedAt: loggedAtISO
       };
 
@@ -193,6 +196,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
               Or pick quick tags (Optional)
             </Typography>
             <QuickLogTags
+              availableTags={availableTags}
               selectedTags={selectedTags}
               onTagToggle={handleTagToggle}
             />

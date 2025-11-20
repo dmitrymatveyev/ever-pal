@@ -1,42 +1,5 @@
 import { Box, Chip, Typography } from '@mui/material';
-
-export interface LogTag {
-  icon: string;
-  label: string;
-  category: string;
-}
-
-export const SENIOR_PET_TAGS: LogTag[] = [
-  // Energy
-  { icon: '😴', label: 'Tired', category: 'energy' },
-  { icon: '🐾', label: 'Active', category: 'energy' },
-  { icon: '⚡', label: 'Energetic', category: 'energy' },
-
-  // Appetite
-  { icon: '🍽️', label: 'Good appetite', category: 'appetite' },
-  { icon: '🚫', label: 'No appetite', category: 'appetite' },
-  { icon: '🥘', label: 'Picky eater', category: 'appetite' },
-
-  // Mobility
-  { icon: '🦴', label: 'Limping', category: 'mobility' },
-  { icon: '🚶', label: 'Walking well', category: 'mobility' },
-  { icon: '🛋️', label: 'Stiff after rest', category: 'mobility' },
-
-  // Mood
-  { icon: '😊', label: 'Playful', category: 'mood' },
-  { icon: '😕', label: 'Restless', category: 'mood' },
-  { icon: '😌', label: 'Calm', category: 'mood' },
-  { icon: '😰', label: 'Anxious', category: 'mood' },
-
-  // Sleep
-  { icon: '💤', label: 'Sleeping well', category: 'sleep' },
-  { icon: '🌙', label: 'Restless night', category: 'sleep' },
-
-  // Behavior
-  { icon: '🎾', label: 'Played fetch', category: 'behavior' },
-  { icon: '🚽', label: 'Accident indoors', category: 'behavior' },
-  { icon: '🤔', label: 'Confused', category: 'behavior' },
-];
+import type { Tag } from '../services/healthLogService';
 
 const CATEGORY_LABELS: Record<string, string> = {
   energy: 'Energy Level',
@@ -48,26 +11,29 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 interface QuickLogTagsProps {
-  selectedTags: string[];
-  onTagToggle: (label: string) => void;
+  availableTags: Tag[];
+  selectedTags: Tag[];
+  onTagToggle: (tag: Tag) => void;
   maxTags?: number;
 }
 
-const QuickLogTags = ({ selectedTags, onTagToggle, maxTags }: QuickLogTagsProps) => {
+const QuickLogTags = ({ availableTags, selectedTags, onTagToggle, maxTags }: QuickLogTagsProps) => {
   // Group tags by category
-  const tagsByCategory = SENIOR_PET_TAGS.reduce((acc, tag) => {
-    if (!acc[tag.category]) {
-      acc[tag.category] = [];
+  const tagsByCategory = availableTags.reduce((acc, tag) => {
+    const category = tag.category || 'other';
+    if (!acc[category]) {
+      acc[category] = [];
     }
-    acc[tag.category].push(tag);
+    acc[category].push(tag);
     return acc;
-  }, {} as Record<string, LogTag[]>);
+  }, {} as Record<string, Tag[]>);
 
-  const handleTagClick = (label: string) => {
-    if (maxTags && selectedTags.length >= maxTags && !selectedTags.includes(label)) {
+  const handleTagClick = (tag: Tag) => {
+    const isSelected = selectedTags.some(t => t.id === tag.id);
+    if (maxTags && selectedTags.length >= maxTags && !isSelected) {
       return; // Don't allow selecting more than maxTags
     }
-    onTagToggle(label);
+    onTagToggle(tag);
   };
 
   return (
@@ -90,17 +56,17 @@ const QuickLogTags = ({ selectedTags, onTagToggle, maxTags }: QuickLogTagsProps)
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {tags.map((tag) => {
-              const isSelected = selectedTags.includes(tag.label);
+              const isSelected = selectedTags.some(t => t.id === tag.id);
               return (
                 <Chip
-                  key={tag.label}
+                  key={tag.id}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <span style={{ fontSize: '1.1rem' }}>{tag.icon}</span>
                       <span style={{ fontSize: '0.875rem' }}>{tag.label}</span>
                     </Box>
                   }
-                  onClick={() => handleTagClick(tag.label)}
+                  onClick={() => handleTagClick(tag)}
                   color={isSelected ? 'primary' : 'default'}
                   variant={isSelected ? 'filled' : 'outlined'}
                   size="small"
