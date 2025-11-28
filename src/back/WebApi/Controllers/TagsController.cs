@@ -15,10 +15,16 @@ namespace EverPal.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllTags()
+        public async Task<IActionResult> GetTags([FromQuery] string? logType = null)
         {
-            var tags = await _tagService.GetAllTagsAsync();
-            return Ok(tags);
+            if (string.IsNullOrEmpty(logType))
+            {
+                var tags = await _tagService.GetAllTagsAsync();
+                return Ok(tags);
+            }
+
+            var filteredTags = await _tagService.GetTagsByLogTypeAsync(logType);
+            return Ok(filteredTags);
         }
     }
 }

@@ -12,6 +12,7 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Chip,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -20,7 +21,8 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
 import { updateHealthLog, type UpdateHealthLogRequest, type HealthLog, type Tag } from '../services/healthLogService';
 import QuickLogTags from './QuickLogTags';
-import { getTags } from '../services/tagService';
+import PhotoUpload from './PhotoUpload';
+import { getTagsByLogType } from '../services/tagService';
 
 interface EditHealthLogDialogProps {
   open: boolean;
@@ -35,22 +37,28 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [notes, setNotes] = useState('');
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [selectedTime, setSelectedTime] = useState<Dayjs | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loadingTags, setLoadingTags] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch available tags when dialog opens
   useEffect(() => {
-    if (open) {
-      getTags().then(tags => setAvailableTags(tags)).catch(err => console.error('Failed to fetch tags:', err));
+    if (open && healthLog) {
+      setLoadingTags(true);
+      getTagsByLogType(healthLog.logType)
+        .then(tags => setAvailableTags(tags))
+        .catch(err => console.error('Failed to fetch tags:', err))
+        .finally(() => setLoadingTags(false));
     }
-  }, [open]);
+  }, [open, healthLog]);
 
   useEffect(() => {
     if (healthLog) {
       setSelectedTags(healthLog.tags);
       setNotes(healthLog.entryText);
+      setPhotoBase64(healthLog.photoBase64 || null);
 
       const loggedAtDate = dayjs(healthLog.loggedAt);
       setSelectedDate(loggedAtDate);
@@ -69,13 +77,17 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
     });
   };
 
+  const handlePhotoChange = (base64: string | null) => {
+    setPhotoBase64(base64);
+  };
+
   const handleSubmit = async () => {
     if (!healthLog) {
       return;
     }
 
-    if (selectedTags.length === 0 && !notes.trim()) {
-      setError('Please select at least one observation or add notes');
+    if (selectedTags.length === 0 && !notes.trim() && !photoBase64) {
+      setError('Please select at least one tag, add notes, or attach a photo');
       return;
     }
 
@@ -101,6 +113,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
       const logData: UpdateHealthLogRequest = {
         entryText: notes.trim(),
         tags: selectedTags,
+        photoBase64: photoBase64 || undefined,
         loggedAt: loggedAtISO
       };
 
@@ -123,14 +136,33 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
     }
   };
 
+  const getLogTypeIcon = (logType: string) => {
+    const icons: Record<string, string> = {
+      food: '🍽️',
+      stool: '💩',
+      medication: '💊',
+      vomit: '🤮',
+      urine: '💧',
+      general: '🐾',
+    };
+    return icons[logType] || '🐾';
+  };
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
       <DialogTitle>
-        <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-          Update Journal Entry
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Quick tags or write a note - whatever works best for you
+        {healthLog && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Typography variant="h5" component="span">
+              {getLogTypeIcon(healthLog.logType)}
+            </Typography>
+            <Typography variant="h5" component="span" sx={{ fontWeight: 600 }}>
+              Edit {healthLog.logType.charAt(0).toUpperCase() + healthLog.logType.slice(1)} Log
+            </Typography>
+          </Box>
+        )}
+        <Typography variant="body2" color="text.secondary">
+          Update tags, notes, photo, or timing
         </Typography>
       </DialogTitle>
       <DialogContent>
@@ -140,7 +172,6 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
           </Alert>
         )}
         <Box sx={{ pt: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Free-form Notes */}
           <Box>
             <Typography
               variant="caption"
@@ -154,7 +185,33 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
                 letterSpacing: '0.05em',
               }}
             >
-              What did you notice?
+              Select tags
+            </Typography>
+            {loadingTags ? (
+              <CircularProgress size={24} />
+            ) : (
+              <QuickLogTags
+                availableTags={availableTags}
+                selectedTags={selectedTags}
+                onTagToggle={handleTagToggle}
+              />
+            )}
+          </Box>
+
+          <Box>
+            <Typography
+              variant="caption"
+              sx={{
+                display: 'block',
+                mb: 1,
+                fontWeight: 600,
+                color: 'text.secondary',
+                textTransform: 'uppercase',
+                fontSize: '0.7rem',
+                letterSpacing: '0.05em',
+              }}
+            >
+              Notes (Optional)
             </Typography>
             <TextField
               value={notes}
@@ -163,11 +220,10 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
               multiline
               rows={3}
               disabled={saving}
-              placeholder="Type anything you noticed... e.g., 'Limping after walk' or 'Very playful today'"
+              placeholder="Add any additional notes..."
             />
           </Box>
 
-          {/* Quick Tag Selection */}
           <Box>
             <Typography
               variant="caption"
@@ -181,16 +237,14 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
                 letterSpacing: '0.05em',
               }}
             >
-              Or pick quick tags (Optional)
+              Photo (Optional)
             </Typography>
-            <QuickLogTags
-              availableTags={availableTags}
-              selectedTags={selectedTags}
-              onTagToggle={handleTagToggle}
+            <PhotoUpload
+              onPhotoChange={handlePhotoChange}
+              currentPhoto={photoBase64 || undefined}
             />
           </Box>
 
-          {/* Date/Time Pickers */}
           <Box>
             <Typography
               variant="caption"
@@ -204,7 +258,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
                 letterSpacing: '0.05em',
               }}
             >
-              When did you notice this?
+              When did this occur?
             </Typography>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>

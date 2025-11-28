@@ -4,8 +4,10 @@ namespace EverPal.WebApi.Models
     {
         public Guid Id { get; set; }
         public Guid PetId { get; set; }
+        public string LogType { get; set; } = "general";
         public string EntryText { get; set; } = string.Empty;
         public List<Tag> Tags { get; set; } = new();
+        public string? PhotoBase64 { get; set; }
         public DateTime LoggedAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -14,15 +16,19 @@ namespace EverPal.WebApi.Models
     public class CreateHealthLogRequest
     {
         public Guid PetId { get; set; }
+        public string LogType { get; set; } = "general";
         public string EntryText { get; set; } = string.Empty;
         public List<Tag> Tags { get; set; } = new();
+        public string? PhotoBase64 { get; set; }
         public DateTime? LoggedAt { get; set; }
     }
 
     public class UpdateHealthLogRequest
     {
+        public string? LogType { get; set; }
         public string? EntryText { get; set; }
         public List<Tag>? Tags { get; set; }
+        public string? PhotoBase64 { get; set; }
         public DateTime? LoggedAt { get; set; }
     }
 }

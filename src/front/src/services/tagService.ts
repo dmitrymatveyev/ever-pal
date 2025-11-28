@@ -2,14 +2,23 @@ import { API_BASE_URL } from '../config';
 import { apiClient } from '../utils/apiClientSingleton';
 import type { Tag } from './healthLogService';
 
-const TAGS_CACHE_KEY = 'everpal_tags_cache';
-const TAGS_CACHE_TIMESTAMP_KEY = 'everpal_tags_cache_timestamp';
-const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+const TAGS_CACHE_PREFIX = 'everpal_tags_cache';
+const CACHE_DURATION_MS = 24 * 60 * 60 * 1000;
+
+const getCacheKey = (logType?: string): string => {
+  return logType ? `${TAGS_CACHE_PREFIX}_${logType}` : `${TAGS_CACHE_PREFIX}_all`;
+};
+
+const getTimestampKey = (logType?: string): string => {
+  return `${getCacheKey(logType)}_timestamp`;
+};
 
 export const getTags = async (): Promise<Tag[]> => {
-  // Check cache first
-  const cachedTimestamp = localStorage.getItem(TAGS_CACHE_TIMESTAMP_KEY);
-  const cachedTags = localStorage.getItem(TAGS_CACHE_KEY);
+  const cacheKey = getCacheKey();
+  const timestampKey = getTimestampKey();
+
+  const cachedTimestamp = localStorage.getItem(timestampKey);
+  const cachedTags = localStorage.getItem(cacheKey);
 
   if (cachedTimestamp && cachedTags) {
     const cacheAge = Date.now() - parseInt(cachedTimestamp, 10);
@@ -18,7 +27,6 @@ export const getTags = async (): Promise<Tag[]> => {
     }
   }
 
-  // Fetch from API
   const tags = await apiClient.fetch<Tag[]>(`${API_BASE_URL}/tags`, {
     method: 'GET',
     headers: {
@@ -26,14 +34,44 @@ export const getTags = async (): Promise<Tag[]> => {
     },
   });
 
-  // Cache the result
-  localStorage.setItem(TAGS_CACHE_KEY, JSON.stringify(tags));
-  localStorage.setItem(TAGS_CACHE_TIMESTAMP_KEY, Date.now().toString());
+  localStorage.setItem(cacheKey, JSON.stringify(tags));
+  localStorage.setItem(timestampKey, Date.now().toString());
+
+  return tags;
+};
+
+export const getTagsByLogType = async (logType: string): Promise<Tag[]> => {
+  const cacheKey = getCacheKey(logType);
+  const timestampKey = getTimestampKey(logType);
+
+  const cachedTimestamp = localStorage.getItem(timestampKey);
+  const cachedTags = localStorage.getItem(cacheKey);
+
+  if (cachedTimestamp && cachedTags) {
+    const cacheAge = Date.now() - parseInt(cachedTimestamp, 10);
+    if (cacheAge < CACHE_DURATION_MS) {
+      return JSON.parse(cachedTags);
+    }
+  }
+
+  const tags = await apiClient.fetch<Tag[]>(`${API_BASE_URL}/tags?logType=${logType}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  localStorage.setItem(cacheKey, JSON.stringify(tags));
+  localStorage.setItem(timestampKey, Date.now().toString());
 
   return tags;
 };
 
 export const clearTagsCache = (): void => {
-  localStorage.removeItem(TAGS_CACHE_KEY);
-  localStorage.removeItem(TAGS_CACHE_TIMESTAMP_KEY);
+  const keys = Object.keys(localStorage);
+  keys.forEach(key => {
+    if (key.startsWith(TAGS_CACHE_PREFIX)) {
+      localStorage.removeItem(key);
+    }
+  });
 };

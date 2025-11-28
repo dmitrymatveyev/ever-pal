@@ -6,13 +6,16 @@ export interface Tag {
   label: string;
   icon: string;
   category?: string;
+  logType?: string | null;
 }
 
 export interface HealthLog {
   id: string;
   petId: string;
+  logType: string;
   entryText: string;
   tags: Tag[];
+  photoBase64?: string;
   loggedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -20,14 +23,18 @@ export interface HealthLog {
 
 export interface CreateHealthLogRequest {
   petId: string;
+  logType: string;
   entryText: string;
   tags: Tag[];
+  photoBase64?: string;
   loggedAt?: string;
 }
 
 export interface UpdateHealthLogRequest {
+  logType?: string;
   entryText?: string;
   tags?: Tag[];
+  photoBase64?: string;
   loggedAt?: string;
 }
 

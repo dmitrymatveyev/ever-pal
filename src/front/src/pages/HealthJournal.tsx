@@ -638,9 +638,42 @@ const HealthJournal = () => {
                       >
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <Box sx={{ flex: 1, pr: 2 }}>
+                            {/* Display log type */}
+                            {log.logType && (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
+                                <Chip
+                                  label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                      <span style={{ fontSize: '1rem' }}>
+                                        {log.logType === 'food' && '🍽️'}
+                                        {log.logType === 'stool' && '💩'}
+                                        {log.logType === 'medication' && '💊'}
+                                        {log.logType === 'vomit' && '🤮'}
+                                        {log.logType === 'urine' && '💧'}
+                                        {log.logType === 'general' && '🐾'}
+                                      </span>
+                                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                                        {log.logType.charAt(0).toUpperCase() + log.logType.slice(1)}
+                                      </span>
+                                    </Box>
+                                  }
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{
+                                    height: 'auto',
+                                    py: 0.5,
+                                    '& .MuiChip-label': {
+                                      px: 1,
+                                      py: 0.25,
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            )}
                             {/* Display tags as chips */}
                             {log.tags && log.tags.length > 0 && (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: log.entryText ? 1 : 0.5 }}>
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: log.entryText || log.photoBase64 ? 1 : 0.5 }}>
                                 {log.tags.map((tag) => (
                                   <Chip
                                     key={tag.id}
@@ -661,6 +694,28 @@ const HealthJournal = () => {
                                     }}
                                   />
                                 ))}
+                              </Box>
+                            )}
+                            {/* Display photo */}
+                            {log.photoBase64 && (
+                              <Box sx={{ mb: 1 }}>
+                                <Box
+                                  component="img"
+                                  src={log.photoBase64}
+                                  alt="Health log photo"
+                                  sx={{
+                                    maxWidth: '100%',
+                                    maxHeight: 200,
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    cursor: 'pointer',
+                                    '&:hover': {
+                                      opacity: 0.9,
+                                    }
+                                  }}
+                                  onClick={() => window.open(log.photoBase64, '_blank')}
+                                />
                               </Box>
                             )}
                             {/* Display notes as text */}

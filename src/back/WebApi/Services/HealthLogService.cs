@@ -32,15 +32,17 @@ namespace EverPal.WebApi.Services
             var tagsJson = JsonSerializer.Serialize(request.Tags, _jsonOptions);
 
             var sql = @"
-                INSERT INTO health_logs (pet_id, entry_text, tags, logged_at)
-                VALUES (@PetId, @EntryText, @Tags::jsonb, @LoggedAt)
-                RETURNING id as Id, pet_id as PetId, entry_text as EntryText, tags::text as TagsJson, logged_at as LoggedAt, created_at as CreatedAt, updated_at as UpdatedAt;";
+                INSERT INTO health_logs (pet_id, log_type, entry_text, tags, photo_base64, logged_at)
+                VALUES (@PetId, @LogType, @EntryText, @Tags::jsonb, @PhotoBase64, @LoggedAt)
+                RETURNING id as Id, pet_id as PetId, log_type as LogType, entry_text as EntryText, tags::text as TagsJson, photo_base64 as PhotoBase64, logged_at as LoggedAt, created_at as CreatedAt, updated_at as UpdatedAt;";
 
             var result = await connection.QuerySingleAsync<dynamic>(sql, new
             {
                 PetId = request.PetId,
+                LogType = request.LogType,
                 EntryText = request.EntryText,
                 Tags = tagsJson,
+                PhotoBase64 = request.PhotoBase64,
                 LoggedAt = loggedAt
             });
 
@@ -48,10 +50,12 @@ namespace EverPal.WebApi.Services
             {
                 Id = result.id,
                 PetId = result.petid,
+                LogType = result.logtype,
                 EntryText = result.entrytext,
                 Tags = string.IsNullOrEmpty(result.tagsjson)
                     ? new List<Tag>()
                     : JsonSerializer.Deserialize<List<Tag>>(result.tagsjson, _jsonOptions) ?? new List<Tag>(),
+                PhotoBase64 = result.photobase64,
                 LoggedAt = result.loggedat,
                 CreatedAt = result.createdat,
                 UpdatedAt = result.updatedat
@@ -65,7 +69,7 @@ namespace EverPal.WebApi.Services
             using var connection = new NpgsqlConnection(_connectionString);
 
             var sql = @"
-                SELECT h.id as Id, h.pet_id as PetId, h.entry_text as EntryText, h.tags::text as TagsJson, h.logged_at as LoggedAt, h.created_at as CreatedAt, h.updated_at as UpdatedAt
+                SELECT h.id as Id, h.pet_id as PetId, h.log_type as LogType, h.entry_text as EntryText, h.tags::text as TagsJson, h.photo_base64 as PhotoBase64, h.logged_at as LoggedAt, h.created_at as CreatedAt, h.updated_at as UpdatedAt
                 FROM health_logs h
                 INNER JOIN pets p ON h.pet_id = p.id
                 WHERE h.id = @HealthLogId AND p.owner_id = @UserId AND h.deleted_at IS NULL AND p.deleted_at IS NULL;";
@@ -83,10 +87,12 @@ namespace EverPal.WebApi.Services
             {
                 Id = result.id,
                 PetId = result.petid,
+                LogType = result.logtype,
                 EntryText = result.entrytext,
                 Tags = string.IsNullOrEmpty(result.tagsjson)
                     ? new List<Tag>()
                     : JsonSerializer.Deserialize<List<Tag>>(result.tagsjson, _jsonOptions) ?? new List<Tag>(),
+                PhotoBase64 = result.photobase64,
                 LoggedAt = result.loggedat,
                 CreatedAt = result.createdat,
                 UpdatedAt = result.updatedat
@@ -103,7 +109,7 @@ namespace EverPal.WebApi.Services
             await _petOwnershipService.ValidateUserOwnsPetAsync(userId, petId);
 
             var sql = @"
-                SELECT id as Id, pet_id as PetId, entry_text as EntryText, tags::text as TagsJson, logged_at as LoggedAt, created_at as CreatedAt, updated_at as UpdatedAt
+                SELECT id as Id, pet_id as PetId, log_type as LogType, entry_text as EntryText, tags::text as TagsJson, photo_base64 as PhotoBase64, logged_at as LoggedAt, created_at as CreatedAt, updated_at as UpdatedAt
                 FROM health_logs
                 WHERE pet_id = @PetId AND deleted_at IS NULL
                 ORDER BY logged_at DESC
@@ -120,10 +126,12 @@ namespace EverPal.WebApi.Services
             {
                 Id = result.id,
                 PetId = result.petid,
+                LogType = result.logtype,
                 EntryText = result.entrytext,
                 Tags = string.IsNullOrEmpty(result.tagsjson)
                     ? new List<Tag>()
                     : JsonSerializer.Deserialize<List<Tag>>(result.tagsjson, _jsonOptions) ?? new List<Tag>(),
+                PhotoBase64 = result.photobase64,
                 LoggedAt = result.loggedat,
                 CreatedAt = result.createdat,
                 UpdatedAt = result.updatedat
@@ -136,7 +144,7 @@ namespace EverPal.WebApi.Services
         {
             using var connection = new NpgsqlConnection(_connectionString);
 
-            if (string.IsNullOrEmpty(request.EntryText) && request.LoggedAt == null && request.Tags == null)
+            if (string.IsNullOrEmpty(request.EntryText) && string.IsNullOrEmpty(request.LogType) && request.LoggedAt == null && request.Tags == null && request.PhotoBase64 == null)
                 return await GetHealthLogAsync(healthLogId, userId);
 
             var setParts = new List<string>();
@@ -145,6 +153,12 @@ namespace EverPal.WebApi.Services
                 { "HealthLogId", healthLogId },
                 { "UserId", userId }
             };
+
+            if (!string.IsNullOrEmpty(request.LogType))
+            {
+                setParts.Add("log_type = @LogType");
+                parameters.Add("LogType", request.LogType);
+            }
 
             if (!string.IsNullOrEmpty(request.EntryText))
             {
@@ -156,6 +170,12 @@ namespace EverPal.WebApi.Services
             {
                 setParts.Add("tags = @Tags::jsonb");
                 parameters.Add("Tags", JsonSerializer.Serialize(request.Tags, _jsonOptions));
+            }
+
+            if (request.PhotoBase64 != null)
+            {
+                setParts.Add("photo_base64 = @PhotoBase64");
+                parameters.Add("PhotoBase64", request.PhotoBase64);
             }
 
             if (request.LoggedAt.HasValue)
@@ -173,7 +193,7 @@ namespace EverPal.WebApi.Services
                   AND p.owner_id = @UserId
                   AND health_logs.deleted_at IS NULL
                   AND p.deleted_at IS NULL
-                RETURNING health_logs.id as Id, health_logs.pet_id as PetId, health_logs.entry_text as EntryText, health_logs.tags::text as TagsJson, health_logs.logged_at as LoggedAt, health_logs.created_at as CreatedAt, health_logs.updated_at as UpdatedAt;";
+                RETURNING health_logs.id as Id, health_logs.pet_id as PetId, health_logs.log_type as LogType, health_logs.entry_text as EntryText, health_logs.tags::text as TagsJson, health_logs.photo_base64 as PhotoBase64, health_logs.logged_at as LoggedAt, health_logs.created_at as CreatedAt, health_logs.updated_at as UpdatedAt;";
 
             var result = await connection.QuerySingleOrDefaultAsync<dynamic>(sql, parameters);
 
@@ -184,10 +204,12 @@ namespace EverPal.WebApi.Services
             {
                 Id = result.id,
                 PetId = result.petid,
+                LogType = result.logtype,
                 EntryText = result.entrytext,
                 Tags = string.IsNullOrEmpty(result.tagsjson)
                     ? new List<Tag>()
                     : JsonSerializer.Deserialize<List<Tag>>(result.tagsjson, _jsonOptions) ?? new List<Tag>(),
+                PhotoBase64 = result.photobase64,
                 LoggedAt = result.loggedat,
                 CreatedAt = result.createdat,
                 UpdatedAt = result.updatedat
