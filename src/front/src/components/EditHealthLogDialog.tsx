@@ -12,7 +12,6 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
-  Chip,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';

@@ -46,7 +46,7 @@ const HealthJournal = () => {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedHealthLog, setSelectedHealthLog] = useState<HealthLog | null>(null);
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [visibleCount, setVisibleCount] = useState(50);
   const [demoMode, setDemoMode] = useState(false);
   const [demoModeSnackbar, setDemoModeSnackbar] = useState(false);
 
@@ -137,8 +137,8 @@ const HealthJournal = () => {
 
       setLoadingLogs(true);
       try {
-        // Fetch initial 5 logs
-        const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 5, 0);
+        // Fetch initial 50 logs (approximately 14 days of entries)
+        const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 50, 0);
         setHealthLogs(logs);
       } catch (err) {
         console.error('Failed to fetch health logs:', err);
@@ -162,7 +162,7 @@ const HealthJournal = () => {
       setSearchParams({ dialog: 'add-pet' });
     } else {
       setSelectedPetId(value);
-      setVisibleCount(5); // Reset visible count when switching pets
+      setVisibleCount(50); // Reset visible count when switching pets
       localStorage.setItem('selectedPetId', value); // Remember selected pet
     }
   };
@@ -190,10 +190,10 @@ const HealthJournal = () => {
     }
 
     try {
-      // Fetch initial 5 logs after adding
-      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 5, 0);
+      // Fetch initial 50 logs after adding (approximately 14 days)
+      const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 50, 0);
       setHealthLogs(logs);
-      setVisibleCount(5); // Reset visible count
+      setVisibleCount(50); // Reset visible count
     } catch (err) {
       console.error('Failed to refresh health logs:', err);
     }
@@ -281,7 +281,8 @@ const HealthJournal = () => {
 
   const selectedPet = pets.find(p => p.id === selectedPetId);
   const visibleLogs = healthLogs;
-  const hasMoreLogs = healthLogs.length === visibleCount && healthLogs.length % 5 === 0;
+  // Show "Load More" if we've fetched exactly the number we requested (indicates there might be more)
+  const hasMoreLogs = healthLogs.length === visibleCount;
   const groupedLogs = groupLogsByDate(visibleLogs);
 
   const handleShowMore = async () => {
@@ -289,11 +290,12 @@ const HealthJournal = () => {
       return;
     }
 
-    const newVisibleCount = visibleCount + 5;
+    const loadMoreCount = 20; // Load 20 more entries at a time (roughly 1 week)
+    const newVisibleCount = visibleCount + loadMoreCount;
 
     try {
-      // Fetch additional 5 logs
-      const newLogs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 5, visibleCount);
+      // Fetch additional logs
+      const newLogs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, loadMoreCount, visibleCount);
 
       // Append new logs to existing ones
       setHealthLogs(prev => [...prev, ...newLogs]);
@@ -337,7 +339,7 @@ const HealthJournal = () => {
           const newPetId = userPets[0].id;
           setSelectedPetId(newPetId);
           localStorage.setItem('selectedPetId', newPetId);
-          setVisibleCount(5); // Reset visible count
+          setVisibleCount(50); // Reset visible count
         }
       }
     } catch (err) {
