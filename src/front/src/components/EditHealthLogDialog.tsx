@@ -22,6 +22,7 @@ import { updateHealthLog, type UpdateHealthLogRequest, type HealthLog, type Tag 
 import QuickLogTags from './QuickLogTags';
 import PhotoUpload from './PhotoUpload';
 import { getTagsByLogType } from '../services/tagService';
+import { OfflineError } from '../utils/apiClientSingleton';
 
 interface EditHealthLogDialogProps {
   open: boolean;
@@ -122,7 +123,12 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
       onClose();
     } catch (err) {
       console.error('Failed to update health log:', err);
-      setError('Failed to update health log. Please try again.');
+
+      if (err instanceof OfflineError) {
+        setError('You are currently offline. Please check your connection and try again.');
+      } else {
+        setError('Failed to update health log. Please try again.');
+      }
     } finally {
       setSaving(false);
     }

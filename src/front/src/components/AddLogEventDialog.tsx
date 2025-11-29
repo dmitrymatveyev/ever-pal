@@ -25,6 +25,7 @@ import QuickLogTags from './QuickLogTags';
 import PhotoUpload from './PhotoUpload';
 import { getPets } from '../services/petService';
 import { getTagsByLogType } from '../services/tagService';
+import { OfflineError } from '../utils/apiClientSingleton';
 
 interface AddLogEventDialogProps {
   open: boolean;
@@ -182,7 +183,12 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
       onClose();
     } catch (err) {
       console.error('Failed to create health log:', err);
-      setError('Failed to create health log. Please try again.');
+
+      if (err instanceof OfflineError) {
+        setError('You are currently offline. Please check your connection and try again.');
+      } else {
+        setError('Failed to create health log. Please try again.');
+      }
     } finally {
       setSaving(false);
     }

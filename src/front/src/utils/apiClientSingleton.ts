@@ -1,7 +1,17 @@
 /**
- * Singleton API client with cold start detection
+ * Singleton API client with cold start detection and offline handling
  * This can be used in service files without React hooks
  */
+
+/**
+ * Custom error class for offline scenarios
+ */
+export class OfflineError extends Error {
+  constructor(message: string = 'You are currently offline') {
+    super(message);
+    this.name = 'OfflineError';
+  }
+}
 
 type ColdStartCallback = (isWakingUp: boolean, message?: string) => void;
 
@@ -18,9 +28,14 @@ class ApiClient {
   }
 
   /**
-   * Enhanced fetch with cold start detection and retry logic
+   * Enhanced fetch with cold start detection, offline detection, and retry logic
    */
   async fetch<T = unknown>(url: string, options: RequestInit = {}): Promise<T> {
+    // Check if offline before attempting request
+    if (!navigator.onLine) {
+      throw new OfflineError();
+    }
+
     let coldStartDetected = false;
     let timeoutId: number | null = null;
 
@@ -73,6 +88,11 @@ class ApiClient {
         // Resolve cold start indicator on error
         if (coldStartDetected) {
           this.coldStartCallback?.(false);
+        }
+
+        // Check if user went offline during request
+        if (!navigator.onLine) {
+          throw new OfflineError('Connection lost during request');
         }
 
         // If this is the last attempt, throw the error
