@@ -19,13 +19,14 @@ import {
   Chip,
   Snackbar
 } from '@mui/material';
-import { Add, Pets, Edit, Delete, Settings } from '@mui/icons-material';
+import { Add, Pets, Edit, Delete, Settings, CameraAlt } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
 import { getHealthLogs, deleteHealthLog, type HealthLog } from '../services/healthLogService';
 import AddPetDialog from '../components/AddPetDialog';
 import AddLogEventDialog from '../components/AddLogEventDialog';
 import EditHealthLogDialog from '../components/EditHealthLogDialog';
 import EditPetDialog from '../components/EditPetDialog';
+import PhotoViewerDialog from '../components/PhotoViewerDialog';
 import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../utils/demoData';
 import { trackEvent } from '../utils/analytics';
 
@@ -49,6 +50,8 @@ const HealthJournal = () => {
   const [visibleCount, setVisibleCount] = useState(50);
   const [demoMode, setDemoMode] = useState(false);
   const [demoModeSnackbar, setDemoModeSnackbar] = useState(false);
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string>('');
 
   // Dialog states derived from URL params
   const dialog = searchParams.get('dialog');
@@ -398,6 +401,16 @@ const HealthJournal = () => {
     navigate('/add-first-pet');
   };
 
+  const handlePhotoClick = (photoUrl: string) => {
+    setSelectedPhoto(photoUrl);
+    setPhotoViewerOpen(true);
+  };
+
+  const handlePhotoViewerClose = () => {
+    setPhotoViewerOpen(false);
+    setSelectedPhoto('');
+  };
+
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
       {/* Demo Mode Banner */}
@@ -698,26 +711,47 @@ const HealthJournal = () => {
                                 ))}
                               </Box>
                             )}
-                            {/* Display photo */}
+                            {/* Display photo indicator/thumbnail */}
                             {log.photoBase64 && (
                               <Box sx={{ mb: 1 }}>
                                 <Box
-                                  component="img"
-                                  src={log.photoBase64}
-                                  alt="Health log photo"
+                                  onClick={() => handlePhotoClick(log.photoBase64!)}
                                   sx={{
-                                    maxWidth: '100%',
-                                    maxHeight: 200,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    padding: 1,
                                     borderRadius: 1,
                                     border: '1px solid',
                                     borderColor: 'divider',
                                     cursor: 'pointer',
+                                    backgroundColor: 'action.hover',
                                     '&:hover': {
-                                      opacity: 0.9,
-                                    }
+                                      backgroundColor: 'action.selected',
+                                    },
                                   }}
-                                  onClick={() => window.open(log.photoBase64, '_blank')}
-                                />
+                                >
+                                  {/* Small thumbnail */}
+                                  <Box
+                                    component="img"
+                                    src={log.photoBase64}
+                                    alt="Health log photo"
+                                    sx={{
+                                      width: 60,
+                                      height: 60,
+                                      objectFit: 'cover',
+                                      borderRadius: 1,
+                                    }}
+                                  />
+
+                                  {/* Photo indicator */}
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <CameraAlt fontSize="small" color="action" />
+                                    <Typography variant="body2" color="text.secondary">
+                                      View photo
+                                    </Typography>
+                                  </Box>
+                                </Box>
                               </Box>
                             )}
                             {/* Display notes as text */}
@@ -814,6 +848,13 @@ const HealthJournal = () => {
         onClose={() => setDemoModeSnackbar(false)}
         message="This is a demo. Click 'Add Your Pet' above to start tracking for real"
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+
+      {/* Photo Viewer Dialog */}
+      <PhotoViewerDialog
+        open={photoViewerOpen}
+        photoUrl={selectedPhoto}
+        onClose={handlePhotoViewerClose}
       />
     </Box>
   );
