@@ -8,6 +8,7 @@ import { ColdStartProvider } from './contexts/ColdStartContext';
 import ColdStartIndicator from './components/ColdStartIndicator';
 import OfflineIndicator from './components/OfflineIndicator';
 import InstallButton from './components/InstallButton';
+import PWAInstallDebug from './components/PWAInstallDebug';
 
 function App() {
   // Detect system preference for dark mode
@@ -91,6 +92,7 @@ function App() {
         <ColdStartIndicator />
         <OfflineIndicator />
         <InstallButton />
+        <PWAInstallDebug />
         <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
           <Box
             sx={{
