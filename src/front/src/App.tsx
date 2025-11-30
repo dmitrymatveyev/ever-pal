@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Container, useMediaQuery, Box } from '@mui/material';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import HealthJournal from './pages/HealthJournal';
 import AddFirstPet from './pages/AddFirstPet';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -9,10 +9,25 @@ import ColdStartIndicator from './components/ColdStartIndicator';
 import OfflineIndicator from './components/OfflineIndicator';
 import InstallButton from './components/InstallButton';
 import PWAInstallDebug from './components/PWAInstallDebug';
+import DisclaimerModal from './components/DisclaimerModal';
+import PaywallScreen from './components/PaywallScreen';
+import TrialBanner from './components/TrialBanner';
+import { useTrialStatus } from './hooks/useTrialStatus';
 
 function App() {
   // Detect system preference for dark mode
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+
+  // Trial status management
+  const { trialStatus, loading } = useTrialStatus();
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  // Show disclaimer modal if user hasn't acknowledged it
+  useEffect(() => {
+    if (trialStatus && !trialStatus.disclaimerAcknowledged) {
+      setShowDisclaimer(true);
+    }
+  }, [trialStatus]);
 
   const theme = useMemo(
     () =>
@@ -85,6 +100,32 @@ function App() {
     [prefersDarkMode],
   );
 
+  // Show loading state while checking trial status
+  if (loading) {
+    return (
+      <ColdStartProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+            Loading...
+          </Box>
+        </ThemeProvider>
+      </ColdStartProvider>
+    );
+  }
+
+  // Show paywall if trial expired and not paid
+  if (trialStatus && !trialStatus.isTrialActive && !trialStatus.isPaid) {
+    return (
+      <ColdStartProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <PaywallScreen />
+        </ThemeProvider>
+      </ColdStartProvider>
+    );
+  }
+
   return (
     <ColdStartProvider>
       <ThemeProvider theme={theme}>
@@ -93,6 +134,10 @@ function App() {
         <OfflineIndicator />
         <InstallButton />
         <PWAInstallDebug />
+
+        {/* Disclaimer Modal */}
+        <DisclaimerModal open={showDisclaimer} onClose={() => setShowDisclaimer(false)} />
+
         <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
           <Box
             sx={{
@@ -113,6 +158,10 @@ function App() {
               }}
             />
           </Box>
+
+          {/* Trial Banner */}
+          <TrialBanner />
+
           <Router>
             <Routes>
               <Route

@@ -59,6 +59,12 @@ builder.Services.AddSingleton<IHealthLogService, HealthLogService>();
 // Register the Tag Service
 builder.Services.AddSingleton<ITagService, TagService>();
 
+// Register the User Service
+builder.Services.AddSingleton<IUserService, UserService>();
+
+// Configure Stripe
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>

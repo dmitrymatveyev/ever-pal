@@ -10,7 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+
+# Environment Variables - Personal Overrides Only
+# .env and .env.production are committed (no secrets in frontend)
 *.local
+.env.local
+.env.*.local
 
 # Editor directories and files
 .vscode/*

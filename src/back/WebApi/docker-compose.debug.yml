@@ -16,6 +16,9 @@ services:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
       - ASPNETCORE_Kestrel__Certificates__Default__Password=${Development_SSL_Certificate_Password}
       - DOTNET_USE_POLLING_FILE_WATCHER=true
+      - Stripe__SecretKey=${STRIPE_SECRET_KEY}
+      - Stripe__WebhookSecret=${STRIPE_WEBHOOK_SECRET}
+      - Stripe__PaymentLinkUrl=${STRIPE_PAYMENT_LINK_URL}
     volumes:
       - ${HOME}/certs/dotnet_dev/:/https/
       - .:/app

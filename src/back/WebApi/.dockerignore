@@ -11,3 +11,6 @@ secrets/
 .git/
 .gitignore
 *.sln
+.env
+.env.*
+!.env.example
