@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
-import { Box, Button, IconButton } from '@mui/material';
-import { PhotoCamera, Close } from '@mui/icons-material';
+import { Box, Button, IconButton, Typography } from '@mui/material';
+import { PhotoCamera, Close, PhotoLibrary } from '@mui/icons-material';
 
 interface PhotoUploadProps {
   onPhotoChange: (base64: string | null) => void;
@@ -9,7 +9,8 @@ interface PhotoUploadProps {
 
 const PhotoUpload = ({ onPhotoChange, currentPhoto }: PhotoUploadProps) => {
   const [preview, setPreview] = useState<string | null>(currentPhoto || null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -40,6 +41,11 @@ const PhotoUpload = ({ onPhotoChange, currentPhoto }: PhotoUploadProps) => {
           ctx.drawImage(img, 0, 0, width, height);
 
           const base64 = canvas.toDataURL('image/jpeg', 0.8);
+
+          // Log compression size for debugging
+          const sizeKB = (base64.length * 3) / 4 / 1024;
+          console.log(`📸 Image compressed: ${sizeKB.toFixed(0)}KB`);
+
           resolve(base64);
         };
         img.onerror = () => reject(new Error('Failed to load image'));
@@ -59,10 +65,8 @@ const PhotoUpload = ({ onPhotoChange, currentPhoto }: PhotoUploadProps) => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image size must be less than 5MB');
-      return;
-    }
+    // Removed 5MB validation - compression handles size reduction
+    // Modern camera photos can be 5-10MB but compress to <500KB
 
     try {
       const compressed = await compressImage(file);
@@ -72,62 +76,104 @@ const PhotoUpload = ({ onPhotoChange, currentPhoto }: PhotoUploadProps) => {
       console.error('Failed to compress image:', error);
       alert('Failed to process image. Please try another file.');
     }
+
+    // Reset input value so the same file can be selected again
+    e.target.value = '';
+  };
+
+  const handleTakePhoto = () => {
+    cameraInputRef.current?.click();
+  };
+
+  const handleChoosePhoto = () => {
+    galleryInputRef.current?.click();
   };
 
   const handleRemove = () => {
     setPreview(null);
     onPhotoChange(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
+    }
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = '';
     }
   };
 
   return (
     <Box>
+      {/* Hidden file inputs */}
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
         type="file"
-        accept="image/jpeg,image/png"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={handleFileSelect}
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
         style={{ display: 'none' }}
         onChange={handleFileSelect}
       />
 
       {preview ? (
-        <Box sx={{ position: 'relative', display: 'inline-block' }}>
-          <Box
-            component="img"
-            src={preview}
-            alt="Preview"
-            sx={{
-              maxWidth: '100%',
-              maxHeight: 200,
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor: 'divider',
-            }}
-          />
-          <IconButton
-            onClick={handleRemove}
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              bgcolor: 'background.paper',
-              '&:hover': { bgcolor: 'background.paper' },
-            }}
-            size="small"
-          >
-            <Close />
-          </IconButton>
+        <Box>
+          <Box sx={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+            <Box
+              component="img"
+              src={preview}
+              alt="Preview"
+              sx={{
+                maxWidth: '100%',
+                maxHeight: 200,
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            />
+            <IconButton
+              onClick={handleRemove}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                bgcolor: 'background.paper',
+                '&:hover': {
+                  bgcolor: 'error.main',
+                  color: 'white',
+                },
+              }}
+              size="small"
+            >
+              <Close />
+            </IconButton>
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            Click the × to remove and add a different photo
+          </Typography>
         </Box>
       ) : (
-        <Button
-          variant="outlined"
-          startIcon={<PhotoCamera />}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          Add Photo
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button
+            variant="outlined"
+            startIcon={<PhotoCamera />}
+            onClick={handleTakePhoto}
+            size="small"
+          >
+            Take Photo
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<PhotoLibrary />}
+            onClick={handleChoosePhoto}
+            size="small"
+          >
+            Choose from Gallery
+          </Button>
+        </Box>
       )}
     </Box>
   );
