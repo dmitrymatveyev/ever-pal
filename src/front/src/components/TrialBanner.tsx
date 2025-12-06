@@ -1,19 +1,11 @@
 import { Alert, Button, Box } from '@mui/material';
-import { useTrialStatus } from '../hooks/useTrialStatus';
+import { useAuth } from '../contexts/AuthContext';
 import { STRIPE_PAYMENT_LINK, LIFETIME_PRICE } from '../config/stripe';
 
-/**
- * Trial banner that shows remaining trial days and upgrade button
- * Only displays when user is on trial (not paid and trial is active)
- */
 const TrialBanner = () => {
-  const { trialStatus } = useTrialStatus();
+  const { trialStatus, hasEngaged } = useAuth();
 
-  // Don't show banner if:
-  // - Trial status not loaded yet
-  // - User has paid
-  // - Trial is not active
-  if (!trialStatus || trialStatus.isPaid || !trialStatus.isTrialActive) {
+  if (!trialStatus || trialStatus.isPaid || !trialStatus.isTrialActive || !hasEngaged) {
     return null;
   }
 

@@ -5,6 +5,7 @@ import HealthJournal from './pages/HealthJournal';
 import AddFirstPet from './pages/AddFirstPet';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ColdStartProvider } from './contexts/ColdStartContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ColdStartIndicator from './components/ColdStartIndicator';
 import OfflineIndicator from './components/OfflineIndicator';
 import InstallButton from './components/InstallButton';
@@ -12,22 +13,37 @@ import PWAInstallDebug from './components/PWAInstallDebug';
 import DisclaimerModal from './components/DisclaimerModal';
 import PaywallScreen from './components/PaywallScreen';
 import TrialBanner from './components/TrialBanner';
-import { useTrialStatus } from './hooks/useTrialStatus';
 
-function App() {
-  // Detect system preference for dark mode
+function AppContent() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-
-  // Trial status management
-  const { trialStatus, loading } = useTrialStatus();
+  const { trialStatus, loading } = useAuth();
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
-  // Show disclaimer modal if user hasn't acknowledged it
   useEffect(() => {
     if (trialStatus && !trialStatus.disclaimerAcknowledged) {
       setShowDisclaimer(true);
     }
   }, [trialStatus]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('[Network] Online - Internet connection restored');
+    };
+
+    const handleOffline = () => {
+      console.log('[Network] Offline - No internet connection');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    console.log('[Network] Initial state:', navigator.onLine ? 'Online' : 'Offline');
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const theme = useMemo(
     () =>
@@ -103,88 +119,89 @@ function App() {
   // Show loading state while checking trial status
   if (loading) {
     return (
-      <ColdStartProvider>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-            Loading...
-          </Box>
-        </ThemeProvider>
-      </ColdStartProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+          Loading...
+        </Box>
+      </ThemeProvider>
     );
   }
 
-  // Show paywall if trial expired and not paid
   if (trialStatus && !trialStatus.isTrialActive && !trialStatus.isPaid) {
     return (
-      <ColdStartProvider>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <PaywallScreen />
-        </ThemeProvider>
-      </ColdStartProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <PaywallScreen />
+      </ThemeProvider>
     );
   }
 
   return (
-    <ColdStartProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <ColdStartIndicator />
-        <OfflineIndicator />
-        <InstallButton />
-        <PWAInstallDebug />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <ColdStartIndicator />
+      <OfflineIndicator />
+      <InstallButton />
+      <PWAInstallDebug />
 
-        {/* Disclaimer Modal */}
-        <DisclaimerModal open={showDisclaimer} onClose={() => setShowDisclaimer(false)} />
+      <DisclaimerModal open={showDisclaimer} onClose={() => setShowDisclaimer(false)} />
 
-        <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mb: { xs: 2, sm: 3, md: 4 },
+          }}
+        >
           <Box
+            component="img"
+            src="/logo.png"
+            alt="EverPal Logo"
             sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              mb: { xs: 2, sm: 3, md: 4 },
+              maxWidth: '100%',
+              maxHeight: { xs: 80, sm: 120, md: 150 },
+              width: 'auto',
+              height: 'auto',
             }}
-          >
-            <Box
-              component="img"
-              src="/logo.png"
-              alt="EverPal Logo"
-              sx={{
-                maxWidth: '100%',
-                maxHeight: { xs: 80, sm: 120, md: 150 },
-                width: 'auto',
-                height: 'auto',
-              }}
+          />
+        </Box>
+
+        <TrialBanner />
+
+        <Router>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <HealthJournal />
+                </ProtectedRoute>
+              }
             />
-          </Box>
+            <Route
+              path="/add-first-pet"
+              element={
+                <ProtectedRoute>
+                  <AddFirstPet />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </Container>
+    </ThemeProvider>
+  );
+}
 
-          {/* Trial Banner */}
-          <TrialBanner />
-
-          <Router>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <HealthJournal />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/add-first-pet"
-                element={
-                  <ProtectedRoute>
-                    <AddFirstPet />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Router>
-        </Container>
-      </ThemeProvider>
+function App() {
+  return (
+    <ColdStartProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </ColdStartProvider>
   );
 }

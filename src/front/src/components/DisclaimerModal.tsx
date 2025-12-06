@@ -12,44 +12,27 @@ import {
 } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 import { acknowledgeDisclaimer } from '../services/trialService';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DisclaimerModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-/**
- * Medical disclaimer modal
- * Must be acknowledged on first launch
- * Required by QA Engineer for legal safety
- */
 const DisclaimerModal = ({ open, onClose }: DisclaimerModalProps) => {
+  const { user, refetchTrialStatus } = useAuth();
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleAccept = async () => {
-    if (!acknowledged) {
+    if (!acknowledged || !user) {
       return;
     }
 
     try {
       setSubmitting(true);
-
-      // Get user from localStorage
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
-        throw new Error('No user found');
-      }
-
-      const userData = JSON.parse(userStr);
-      const token = userData.token;
-      const isAnonymous = userData.isAnonymous || false;
-
-      if (!token) {
-        throw new Error('No token found');
-      }
-
-      await acknowledgeDisclaimer(token, isAnonymous);
+      await acknowledgeDisclaimer(user.token, user.isAnonymous || false);
+      await refetchTrialStatus();
       onClose();
     } catch (error) {
       console.error('Failed to acknowledge disclaimer:', error);

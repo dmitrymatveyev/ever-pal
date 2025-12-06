@@ -12,9 +12,11 @@ import {
 import { createPet, type CreatePetRequest } from '../services/petService';
 import { trackEvent, trackPageView, trackFormInteraction, trackFormSubmit } from '../utils/analytics';
 import { enableDemoMode } from '../utils/demoData';
+import { useAuth } from '../contexts/AuthContext';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
+  const { markEngaged } = useAuth();
   const [formData, setFormData] = useState<CreatePetRequest>({
     name: '',
     breed: '',
@@ -83,14 +85,14 @@ const AddFirstPet = () => {
 
       await createPet(userData.token, petData, userData.isAnonymous);
 
-      // Track successful pet creation
+      markEngaged();
+
       trackFormSubmit('add_first_pet', true);
       trackEvent('pet_created_successfully', {
         hasAge: !!petData.age,
         timeSpentSeconds: Math.floor((new Date().getTime() - pageLoadTime.current.getTime()) / 1000)
       });
 
-      // Navigate to health journal after adding first pet
       navigate('/');
     } catch (err) {
       console.error('Failed to create pet:', err);

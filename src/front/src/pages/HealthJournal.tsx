@@ -29,6 +29,7 @@ import EditPetDialog from '../components/EditPetDialog';
 import PhotoViewerDialog from '../components/PhotoViewerDialog';
 import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../utils/demoData';
 import { trackEvent } from '../utils/analytics';
+import { useAuth } from '../contexts/AuthContext';
 
 interface UserData {
   email: string;
@@ -39,6 +40,7 @@ interface UserData {
 const HealthJournal = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { markEngaged } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>('');
@@ -65,7 +67,6 @@ const HealthJournal = () => {
   useEffect(() => {
     const initializeData = async () => {
       try {
-        // Check for demo mode first
         if (isDemoMode()) {
           setDemoMode(true);
           const demoPet = getDemoPet();
@@ -74,7 +75,6 @@ const HealthJournal = () => {
           setHealthLogs(getDemoHealthLogs());
           setLoading(false);
 
-          // Track demo mode session
           trackEvent('demo_mode_session_started', {
             timestamp: new Date().toISOString()
           });
@@ -91,22 +91,20 @@ const HealthJournal = () => {
         const user = JSON.parse(userStr);
         setUserData(user);
 
-        // Fetch pets
         const userPets = await getPets(user.token, user.isAnonymous);
         setPets(userPets);
 
         if (userPets.length === 0) {
-          // No pets - redirect to add first pet
           navigate('/add-first-pet');
         } else {
-          // Try to restore previously selected pet
+          markEngaged();
+
           const savedPetId = localStorage.getItem('selectedPetId');
           const petExists = savedPetId && userPets.some(p => p.id === savedPetId);
 
           if (petExists) {
             setSelectedPetId(savedPetId);
           } else {
-            // Select first pet by default and save it
             setSelectedPetId(userPets[0].id);
             localStorage.setItem('selectedPetId', userPets[0].id);
           }
