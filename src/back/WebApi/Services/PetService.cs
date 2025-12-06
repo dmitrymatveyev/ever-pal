@@ -8,10 +8,12 @@ namespace EverPal.WebApi.Services
     public class PetService : IPetService
     {
         private readonly string _connectionString;
+        private readonly IUserService _userService;
 
-        public PetService(IConfiguration configuration)
+        public PetService(IConfiguration configuration, IUserService userService)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
+            _userService = userService;
         }
 
         public async Task<Pet> CreatePetAsync(Guid ownerId, CreatePetRequest request)
@@ -38,6 +40,9 @@ namespace EverPal.WebApi.Services
                 Weight = request.Weight,
                 Age = request.Age
             });
+
+            // Start trial when user creates their first pet
+            await _userService.StartTrialAsync(ownerId.ToString());
 
             return pet;
         }

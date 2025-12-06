@@ -39,6 +39,7 @@ namespace EverPal.WebApi.Controllers
 
                 var isTrialActive = await _userService.IsTrialActiveAsync(userId);
                 var isPaid = user.IsPaid;
+                var trialStarted = user.TrialStartedAt.HasValue;
 
                 var daysRemaining = user.TrialEndsAt.HasValue
                     ? Math.Max(0, (int)(user.TrialEndsAt.Value - DateTime.UtcNow).TotalDays)
@@ -48,6 +49,7 @@ namespace EverPal.WebApi.Controllers
                 {
                     isTrialActive,
                     isPaid,
+                    trialStarted,
                     trialEndsAt = user.TrialEndsAt,
                     daysRemaining,
                     disclaimerAcknowledged = user.DisclaimerAcknowledged

@@ -204,5 +204,30 @@ namespace EverPal.WebApi.Services
                 _logger.LogWarning("Failed to acknowledge disclaimer for user {UserId}. User may not exist.", userId);
             }
         }
+
+        public async Task<bool> StartTrialAsync(string userId)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            var sql = @"
+                UPDATE users
+                SET trial_started_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
+                    trial_ends_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' + INTERVAL '7 days',
+                    updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+                WHERE id = @UserId::uuid
+                  AND trial_started_at IS NULL
+                RETURNING id;";
+
+            var result = await connection.QueryFirstOrDefaultAsync<Guid?>(sql, new { UserId = userId });
+
+            if (result.HasValue)
+            {
+                _logger.LogInformation("Started 7-day trial for user {UserId}", userId);
+                return true;
+            }
+
+            _logger.LogDebug("Trial not started for user {UserId}. Trial may already be active or user not found.", userId);
+            return false;
+        }
     }
 }

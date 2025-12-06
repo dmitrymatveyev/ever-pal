@@ -38,8 +38,8 @@ const TrialBanner = () => {
 
     const paymentUrl = `${STRIPE_PAYMENT_LINK}?${params.toString()}`;
 
-    // Open in new tab
-    window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+    // Navigate to Stripe (same window to return to success page)
+    window.location.href = paymentUrl;
   };
 
   return (

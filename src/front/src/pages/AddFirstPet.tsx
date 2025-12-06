@@ -16,7 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
-  const { markEngaged } = useAuth();
+  const { markEngaged, refetchTrialStatus } = useAuth();
   const [formData, setFormData] = useState<CreatePetRequest>({
     name: '',
     breed: '',
@@ -86,6 +86,7 @@ const AddFirstPet = () => {
       await createPet(userData.token, petData, userData.isAnonymous);
 
       markEngaged();
+      await refetchTrialStatus();
 
       trackFormSubmit('add_first_pet', true);
       trackEvent('pet_created_successfully', {

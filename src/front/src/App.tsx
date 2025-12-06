@@ -3,6 +3,7 @@ import { ThemeProvider, createTheme, CssBaseline, Container, useMediaQuery, Box 
 import { useMemo, useState, useEffect } from 'react';
 import HealthJournal from './pages/HealthJournal';
 import AddFirstPet from './pages/AddFirstPet';
+import PaymentSuccess from './pages/PaymentSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ColdStartProvider } from './contexts/ColdStartContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -128,7 +129,8 @@ function AppContent() {
     );
   }
 
-  if (trialStatus && !trialStatus.isTrialActive && !trialStatus.isPaid) {
+  // Only show paywall if trial has started, is no longer active, and user hasn't paid
+  if (trialStatus && trialStatus.trialStarted && !trialStatus.isTrialActive && !trialStatus.isPaid) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -188,6 +190,7 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

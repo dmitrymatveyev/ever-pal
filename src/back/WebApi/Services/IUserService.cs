@@ -10,5 +10,6 @@ namespace EverPal.WebApi.Services
         Task<bool> IsTrialActiveAsync(string userId);
         Task<bool> HasPaidAccessAsync(string userId);
         Task AcknowledgeDisclaimerAsync(string userId);
+        Task<bool> StartTrialAsync(string userId);
     }
 }

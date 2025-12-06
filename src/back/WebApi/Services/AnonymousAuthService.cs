@@ -25,15 +25,11 @@ namespace EverPal.WebApi.Services
             var sql = @"
                 INSERT INTO users (
                     anonymous_token,
-                    trial_started_at,
-                    trial_ends_at,
                     created_at,
                     updated_at
                 )
                 VALUES (
                     @Token,
-                    NOW() AT TIME ZONE 'UTC',
-                    NOW() AT TIME ZONE 'UTC' + INTERVAL '7 days',
                     NOW() AT TIME ZONE 'UTC',
                     NOW() AT TIME ZONE 'UTC'
                 )

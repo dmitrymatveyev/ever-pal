@@ -4,6 +4,7 @@ import { apiClient } from '../utils/apiClientSingleton';
 export interface TrialStatus {
   isTrialActive: boolean;
   isPaid: boolean;
+  trialStarted: boolean;
   trialEndsAt: string | null;
   daysRemaining: number | null;
   disclaimerAcknowledged: boolean;

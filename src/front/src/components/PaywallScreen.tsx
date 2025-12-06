@@ -62,10 +62,10 @@ const PaywallScreen = () => {
         }}
       >
         <Typography variant="h4" gutterBottom align="center">
-          Your Trial Has Ended
+          Don't Lose Your Health Journal
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph align="center">
-          Continue tracking your pet's health with lifetime access
+          Your 7-day trial has ended. Keep all your pet's health data with lifetime access.
         </Typography>
 
         <Card sx={{ mt: 3, width: '100%', maxWidth: 400 }}>
@@ -77,8 +77,14 @@ const PaywallScreen = () => {
               <Typography variant="subtitle1" color="text.secondary">
                 One-time payment - Lifetime access
               </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Just $6.58/month equivalent
+              </Typography>
               <Typography variant="caption" color="warning.main" display="block" sx={{ mt: 1 }}>
                 Limited to first {FOUNDING_MEMBER_LIMIT} customers
+              </Typography>
+              <Typography variant="caption" color="success.main" display="block" sx={{ mt: 0.5 }}>
+                Less than one vet visit
               </Typography>
             </Box>
 
@@ -126,7 +132,11 @@ const PaywallScreen = () => {
               Upgrade to Lifetime Access
             </Button>
 
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, textAlign: 'center' }}>
+            <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 2, textAlign: 'center', fontWeight: 500 }}>
+              30-day money-back guarantee - no questions asked
+            </Typography>
+
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, textAlign: 'center' }}>
               After {FOUNDING_MEMBER_LIMIT} customers: ${YEARLY_PRICE}/year
             </Typography>
           </CardContent>
