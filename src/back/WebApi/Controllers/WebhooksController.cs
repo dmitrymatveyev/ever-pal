@@ -96,13 +96,13 @@ namespace EverPal.WebApi.Controllers
                 _logger.LogDebug("Session details - PaymentIntentId: {PaymentIntentId}, CustomerId: {CustomerId}, CustomerEmail: {CustomerEmail}",
                     session.PaymentIntentId, session.CustomerId ?? "NULL", session.CustomerEmail ?? "NULL");
 
-                // Validate payment amount (7900 cents = $79)
-                const long EXPECTED_AMOUNT = 7900;
-                if (session.AmountTotal != EXPECTED_AMOUNT)
+                // Validate payment amount (>= 7900 cents = $79, allows for tax)
+                const long MINIMUM_AMOUNT = 7900;
+                if (session.AmountTotal < MINIMUM_AMOUNT)
                 {
-                    _logger.LogWarning("Payment amount mismatch for session {SessionId}: expected {ExpectedAmount}, got {ActualAmount}",
-                        session.Id, EXPECTED_AMOUNT, session.AmountTotal);
-                    return; // Don't credit for wrong amount
+                    _logger.LogWarning("Payment amount too low for session {SessionId}: minimum {MinimumAmount}, got {ActualAmount}",
+                        session.Id, MINIMUM_AMOUNT, session.AmountTotal);
+                    return; // Don't credit for insufficient amount
                 }
 
                 // Check if payment already processed (idempotency)
