@@ -1,5 +1,7 @@
+using EverPal.WebApi.Authentication;
 using EverPal.WebApi.Middlewares;
 using EverPal.WebApi.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
 
@@ -41,8 +43,14 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-// Register the Anonymous Auth Service
+builder.Services.AddAuthentication("UnifiedAuth")
+    .AddScheme<AuthenticationSchemeOptions, UnifiedAuthenticationHandler>("UnifiedAuth", options => { });
+
 builder.Services.AddSingleton<IAnonymousAuthService, AnonymousAuthService>();
+builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
+
+// Register HttpClient
+builder.Services.AddHttpClient();
 
 // Register the Pet Ownership Service
 builder.Services.AddSingleton<IPetOwnershipService, PetOwnershipService>();
@@ -90,7 +98,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
-app.UseAnonymousAuth();
+app.UseMiddleware<UnifiedAuthMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

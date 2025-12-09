@@ -7,7 +7,8 @@ import {
   Paper,
   TextField,
   CircularProgress,
-  Alert
+  Alert,
+  Link
 } from '@mui/material';
 import { createPet, type CreatePetRequest } from '../services/petService';
 import { trackEvent, trackPageView, trackFormInteraction, trackFormSubmit } from '../utils/analytics';
@@ -197,6 +198,20 @@ const AddFirstPet = () => {
           >
             Just name to get started • Add breed, weight, photo in pet profile
           </Typography>
+
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
+              Already have an account?{' '}
+            </Typography>
+            <Link
+              component="button"
+              variant="body2"
+              onClick={() => navigate('/signin')}
+              sx={{ textDecoration: 'none', fontWeight: 600 }}
+            >
+              Sign in
+            </Link>
+          </Box>
         </Box>
       </Paper>
     </Box>

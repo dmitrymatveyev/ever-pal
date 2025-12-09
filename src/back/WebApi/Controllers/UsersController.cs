@@ -52,7 +52,8 @@ namespace EverPal.WebApi.Controllers
                     trialStarted,
                     trialEndsAt = user.TrialEndsAt,
                     daysRemaining,
-                    disclaimerAcknowledged = user.DisclaimerAcknowledged
+                    disclaimerAcknowledged = user.DisclaimerAcknowledged,
+                    emailVerified = user.EmailVerified
                 });
             }
             catch (Exception ex)

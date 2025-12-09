@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import HealthJournal from './pages/HealthJournal';
 import AddFirstPet from './pages/AddFirstPet';
 import PaymentSuccess from './pages/PaymentSuccess';
+import SignIn from './pages/SignIn';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ColdStartProvider } from './contexts/ColdStartContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -174,6 +175,7 @@ function AppContent() {
 
         <Router>
           <Routes>
+            <Route path="/signin" element={<SignIn />} />
             <Route
               path="/"
               element={

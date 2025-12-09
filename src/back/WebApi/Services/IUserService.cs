@@ -11,5 +11,12 @@ namespace EverPal.WebApi.Services
         Task<bool> HasPaidAccessAsync(string userId);
         Task AcknowledgeDisclaimerAsync(string userId);
         Task<bool> StartTrialAsync(string userId);
+
+        Task<User?> GetUserByFirebaseUidAsync(string firebaseUid);
+        Task<User?> GetUserByAnonymousTokenAsync(string anonymousToken);
+        Task<User?> GetUserByEmailAsync(string email);
+        Task<bool> ConvertAnonymousToEmailAsync(Guid userId, string firebaseUid, string email);
+        Task UpdateEmailVerificationSentAsync(Guid userId);
+        Task MarkEmailVerifiedAsync(Guid userId);
     }
 }

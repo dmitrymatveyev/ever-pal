@@ -12,13 +12,16 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAuth } from '../contexts/AuthContext';
+import SecurityPromptCard from '../components/SecurityPromptCard';
+import EmailSetupDialog from '../components/EmailSetupDialog';
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { refetchTrialStatus, trialStatus } = useAuth();
+  const { refetchTrialStatus, trialStatus, user, convertToEmail } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'timeout' | 'cancelled'>('loading');
   const [pollCount, setPollCount] = useState(0);
+  const [emailSetupOpen, setEmailSetupOpen] = useState(false);
 
   const cancelled = searchParams.get('cancelled') === 'true';
 
@@ -66,6 +69,22 @@ const PaymentSuccess = () => {
 
   const handleTryAgain = () => {
     window.location.href = window.location.pathname;
+  };
+
+  const handleSetUpEmail = () => {
+    setEmailSetupOpen(true);
+  };
+
+  const handleSkipEmailSetup = () => {
+    navigate('/');
+  };
+
+  const handleEmailSetupSuccess = (email: string, firebaseToken: string) => {
+    convertToEmail(email, firebaseToken);
+    setEmailSetupOpen(false);
+    setTimeout(() => {
+      navigate('/');
+    }, 2000);
   };
 
   if (status === 'cancelled') {
@@ -182,6 +201,13 @@ const PaymentSuccess = () => {
             </CardContent>
           </Card>
 
+          {user?.isAnonymous && (
+            <SecurityPromptCard
+              onSetUpEmail={handleSetUpEmail}
+              onSkip={handleSkipEmailSetup}
+            />
+          )}
+
           <Button
             variant="contained"
             color="primary"
@@ -192,6 +218,15 @@ const PaymentSuccess = () => {
             Go to Journal
           </Button>
         </Box>
+
+        {user && (
+          <EmailSetupDialog
+            open={emailSetupOpen}
+            onClose={() => setEmailSetupOpen(false)}
+            onSuccess={handleEmailSetupSuccess}
+            anonymousToken={user.token}
+          />
+        )}
       </Container>
     );
   }

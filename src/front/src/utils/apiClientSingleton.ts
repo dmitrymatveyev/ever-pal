@@ -13,6 +13,19 @@ export class OfflineError extends Error {
   }
 }
 
+/**
+ * Custom error class for API errors with status code
+ */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 type ColdStartCallback = (isWakingUp: boolean, message?: string) => void;
 
 class ApiClient {
@@ -43,7 +56,7 @@ class ApiClient {
     for (let attempt = 0; attempt < this.maxRetries; attempt++) {
       try {
         // Set up cold start detection timer
-        timeoutId = setTimeout(() => {
+        timeoutId = window.setTimeout(() => {
           coldStartDetected = true;
           this.coldStartCallback?.(true, 'Waking up the server...');
         }, this.slowThreshold);
@@ -69,7 +82,18 @@ class ApiClient {
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(errorText || `HTTP error! status: ${response.status}`);
+          let errorMessage = `HTTP error! status: ${response.status}`;
+          try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.message) {
+              errorMessage = errorJson.message;
+            }
+          } catch {
+            if (errorText) {
+              errorMessage = errorText;
+            }
+          }
+          throw new ApiError(errorMessage, response.status);
         }
 
         // Handle empty responses (like DELETE operations)

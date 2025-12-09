@@ -29,7 +29,7 @@ export const fetchWithColdStart = async (
 
   // Set up cold start detection timer
   const coldStartPromise = new Promise<void>((resolve) => {
-    timeoutId = setTimeout(() => {
+    timeoutId = window.setTimeout(() => {
       coldStartDetected = true;
       onColdStartDetected?.();
       resolve();

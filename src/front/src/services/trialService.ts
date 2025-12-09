@@ -8,6 +8,7 @@ export interface TrialStatus {
   trialEndsAt: string | null;
   daysRemaining: number | null;
   disclaimerAcknowledged: boolean;
+  emailVerified: boolean;
 }
 
 /**

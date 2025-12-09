@@ -14,16 +14,21 @@ namespace EverPal.WebApi.Models
         public string? FirebaseUid { get; set; }
         public string? AnonymousToken { get; set; }
 
+        // Email verification
+        public bool EmailVerified { get; set; }
+        public DateTime? EmailVerifiedAt { get; set; }
+        public DateTime? EmailVerificationSentAt { get; set; }
+
         // Trial and payment fields
         public DateTime? TrialStartedAt { get; set; }
         public DateTime? TrialEndsAt { get; set; }
-        public bool IsPaid { get; set; } = false;
+        public bool IsPaid { get; set; }
         public DateTime? PaymentDate { get; set; }
         public string? StripeCustomerId { get; set; }
         public string? StripePaymentIntentId { get; set; }
 
         // Disclaimer
-        public bool DisclaimerAcknowledged { get; set; } = false;
+        public bool DisclaimerAcknowledged { get; set; }
         public DateTime? DisclaimerAcknowledgedAt { get; set; }
 
         // Timestamps

@@ -12,6 +12,9 @@ interface AuthContextValue {
   refetchTrialStatus: () => Promise<void>;
   hasEngaged: boolean;
   markEngaged: () => void;
+  loginWithEmail: (token: string, userId: string, email: string, emailVerified: boolean) => void;
+  logout: () => void;
+  convertToEmail: (email: string, firebaseToken: string) => void;
 }
 
 interface UserData {
@@ -21,6 +24,7 @@ interface UserData {
   email: string;
   displayName: string;
   isAnonymous?: boolean;
+  emailVerified?: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -36,6 +40,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const status = await getTrialStatus(userData.token, userData.isAnonymous || false);
       setTrialStatus(status);
+
+      if (status.emailVerified !== userData.emailVerified) {
+        const updatedUser = { ...userData, emailVerified: status.emailVerified };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
     } catch (err) {
       console.error('Failed to fetch trial status:', err);
       setError(err instanceof Error ? err.message : 'Failed to load trial status');
@@ -52,6 +62,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const markEngaged = () => {
     setHasEngaged(true);
     localStorage.setItem('userEngaged', 'true');
+  };
+
+  const loginWithEmail = (token: string, userId: string, email: string, emailVerified: boolean) => {
+    const userData: UserData = {
+      token,
+      refreshToken: '',
+      userId,
+      email,
+      displayName: email.split('@')[0],
+      isAnonymous: false,
+      emailVerified,
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    identifyUser(userId, {
+      email,
+      displayName: userData.displayName,
+      isAnonymous: false,
+    });
+  };
+
+  const logout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('selectedPetId');
+    setUser(null);
+    setTrialStatus(null);
+    window.location.href = '/signin';
+  };
+
+  const convertToEmail = (email: string, firebaseToken: string) => {
+    if (!user) {
+      return;
+    }
+    const userData: UserData = {
+      ...user,
+      token: firebaseToken,
+      email,
+      isAnonymous: false,
+      emailVerified: false,
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    identifyUser(userData.userId, {
+      email,
+      displayName: email.split('@')[0],
+      isAnonymous: false,
+    });
   };
 
   useEffect(() => {
@@ -113,7 +170,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         error,
         refetchTrialStatus,
         hasEngaged,
-        markEngaged
+        markEngaged,
+        loginWithEmail,
+        logout,
+        convertToEmail,
       }}
     >
       {children}

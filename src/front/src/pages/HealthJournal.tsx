@@ -19,7 +19,7 @@ import {
   Chip,
   Snackbar
 } from '@mui/material';
-import { Add, Pets, Edit, Delete, Settings, CameraAlt } from '@mui/icons-material';
+import { Add, Pets, Edit, Delete, Settings, CameraAlt, AccountCircle } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
 import { getHealthLogs, deleteHealthLog, type HealthLog } from '../services/healthLogService';
 import AddPetDialog from '../components/AddPetDialog';
@@ -27,6 +27,8 @@ import AddLogEventDialog from '../components/AddLogEventDialog';
 import EditHealthLogDialog from '../components/EditHealthLogDialog';
 import EditPetDialog from '../components/EditPetDialog';
 import PhotoViewerDialog from '../components/PhotoViewerDialog';
+import AccountMenuDialog from '../components/AccountMenuDialog';
+import EmailSetupDialog from '../components/EmailSetupDialog';
 import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../utils/demoData';
 import { trackEvent } from '../utils/analytics';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,7 +42,7 @@ interface UserData {
 const HealthJournal = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { markEngaged } = useAuth();
+  const { markEngaged, user, logout, convertToEmail } = useAuth();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>('');
@@ -54,6 +56,8 @@ const HealthJournal = () => {
   const [demoModeSnackbar, setDemoModeSnackbar] = useState(false);
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string>('');
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [emailSetupOpen, setEmailSetupOpen] = useState(false);
 
   // Dialog states derived from URL params
   const dialog = searchParams.get('dialog');
@@ -409,6 +413,27 @@ const HealthJournal = () => {
     setSelectedPhoto('');
   };
 
+  const handleAccountMenuOpen = () => {
+    setAccountMenuOpen(true);
+  };
+
+  const handleAccountMenuClose = () => {
+    setAccountMenuOpen(false);
+  };
+
+  const handleSecureAccount = () => {
+    setEmailSetupOpen(true);
+  };
+
+  const handleEmailSetupClose = () => {
+    setEmailSetupOpen(false);
+  };
+
+  const handleEmailSetupSuccess = (email: string, firebaseToken: string) => {
+    convertToEmail(email, firebaseToken);
+    setEmailSetupOpen(false);
+  };
+
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
       {/* Demo Mode Banner */}
@@ -460,23 +485,43 @@ const HealthJournal = () => {
             overflow: 'visible',
           }}
         >
-          {/* Settings Icon */}
-          <IconButton
-            onClick={openEditPetDialog}
-            aria-label="edit pet"
-            size="small"
+          {/* Account and Settings Icons */}
+          <Box
             sx={{
               position: 'absolute',
               top: { xs: 8, sm: 16 },
               right: { xs: 8, sm: 16 },
-              bgcolor: 'background.paper',
-              '&:hover': {
-                bgcolor: 'action.hover',
-              },
+              display: 'flex',
+              gap: 1,
             }}
           >
-            <Settings fontSize="small" />
-          </IconButton>
+            <IconButton
+              onClick={handleAccountMenuOpen}
+              aria-label="account menu"
+              size="small"
+              sx={{
+                bgcolor: 'background.paper',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <AccountCircle fontSize="small" />
+            </IconButton>
+            <IconButton
+              onClick={openEditPetDialog}
+              aria-label="edit pet"
+              size="small"
+              sx={{
+                bgcolor: 'background.paper',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <Settings fontSize="small" />
+            </IconButton>
+          </Box>
 
           {/* Pet Avatar - Prominent */}
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 2, sm: 3 } }}>
@@ -854,6 +899,27 @@ const HealthJournal = () => {
         photoUrl={selectedPhoto}
         onClose={handlePhotoViewerClose}
       />
+
+      {/* Account Menu Dialog */}
+      <AccountMenuDialog
+        open={accountMenuOpen}
+        onClose={handleAccountMenuClose}
+        isAnonymous={user?.isAnonymous || false}
+        email={user?.email}
+        emailVerified={user?.emailVerified}
+        onSecureAccount={handleSecureAccount}
+        onSignOut={logout}
+      />
+
+      {/* Email Setup Dialog */}
+      {user && (
+        <EmailSetupDialog
+          open={emailSetupOpen}
+          onClose={handleEmailSetupClose}
+          onSuccess={handleEmailSetupSuccess}
+          anonymousToken={user.token}
+        />
+      )}
     </Box>
   );
 };

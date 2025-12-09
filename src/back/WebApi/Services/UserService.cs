@@ -29,6 +29,9 @@ namespace EverPal.WebApi.Services
                     last_name as LastName,
                     firebase_uid as FirebaseUid,
                     anonymous_token as AnonymousToken,
+                    email_verified as EmailVerified,
+                    email_verified_at as EmailVerifiedAt,
+                    email_verification_sent_at as EmailVerificationSentAt,
                     trial_started_at as TrialStartedAt,
                     trial_ends_at as TrialEndsAt,
                     is_paid as IsPaid,
@@ -63,6 +66,9 @@ namespace EverPal.WebApi.Services
                     last_name as LastName,
                     firebase_uid as FirebaseUid,
                     anonymous_token as AnonymousToken,
+                    email_verified as EmailVerified,
+                    email_verified_at as EmailVerifiedAt,
+                    email_verification_sent_at as EmailVerificationSentAt,
                     trial_started_at as TrialStartedAt,
                     trial_ends_at as TrialEndsAt,
                     is_paid as IsPaid,
@@ -228,6 +234,194 @@ namespace EverPal.WebApi.Services
 
             _logger.LogDebug("Trial not started for user {UserId}. Trial may already be active or user not found.", userId);
             return false;
+        }
+
+        public async Task<User?> GetUserByFirebaseUidAsync(string firebaseUid)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            var sql = @"
+                SELECT
+                    id,
+                    email,
+                    phone,
+                    first_name as FirstName,
+                    last_name as LastName,
+                    firebase_uid as FirebaseUid,
+                    anonymous_token as AnonymousToken,
+                    email_verified as EmailVerified,
+                    email_verified_at as EmailVerifiedAt,
+                    email_verification_sent_at as EmailVerificationSentAt,
+                    trial_started_at as TrialStartedAt,
+                    trial_ends_at as TrialEndsAt,
+                    is_paid as IsPaid,
+                    payment_date as PaymentDate,
+                    stripe_customer_id as StripeCustomerId,
+                    stripe_payment_intent_id as StripePaymentIntentId,
+                    disclaimer_acknowledged as DisclaimerAcknowledged,
+                    disclaimer_acknowledged_at as DisclaimerAcknowledgedAt,
+                    created_at as CreatedAt,
+                    updated_at as UpdatedAt
+                FROM users
+                WHERE firebase_uid = @FirebaseUid;";
+
+            return await connection.QueryFirstOrDefaultAsync<User>(sql, new { FirebaseUid = firebaseUid });
+        }
+
+        public async Task<User?> GetUserByAnonymousTokenAsync(string anonymousToken)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            var sql = @"
+                SELECT
+                    id,
+                    email,
+                    phone,
+                    first_name as FirstName,
+                    last_name as LastName,
+                    firebase_uid as FirebaseUid,
+                    anonymous_token as AnonymousToken,
+                    email_verified as EmailVerified,
+                    email_verified_at as EmailVerifiedAt,
+                    email_verification_sent_at as EmailVerificationSentAt,
+                    trial_started_at as TrialStartedAt,
+                    trial_ends_at as TrialEndsAt,
+                    is_paid as IsPaid,
+                    payment_date as PaymentDate,
+                    stripe_customer_id as StripeCustomerId,
+                    stripe_payment_intent_id as StripePaymentIntentId,
+                    disclaimer_acknowledged as DisclaimerAcknowledged,
+                    disclaimer_acknowledged_at as DisclaimerAcknowledgedAt,
+                    created_at as CreatedAt,
+                    updated_at as UpdatedAt
+                FROM users
+                WHERE anonymous_token = @AnonymousToken;";
+
+            return await connection.QueryFirstOrDefaultAsync<User>(sql, new { AnonymousToken = anonymousToken });
+        }
+
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            var sql = @"
+                SELECT
+                    id,
+                    email,
+                    phone,
+                    first_name as FirstName,
+                    last_name as LastName,
+                    firebase_uid as FirebaseUid,
+                    anonymous_token as AnonymousToken,
+                    email_verified as EmailVerified,
+                    email_verified_at as EmailVerifiedAt,
+                    email_verification_sent_at as EmailVerificationSentAt,
+                    trial_started_at as TrialStartedAt,
+                    trial_ends_at as TrialEndsAt,
+                    is_paid as IsPaid,
+                    payment_date as PaymentDate,
+                    stripe_customer_id as StripeCustomerId,
+                    stripe_payment_intent_id as StripePaymentIntentId,
+                    disclaimer_acknowledged as DisclaimerAcknowledged,
+                    disclaimer_acknowledged_at as DisclaimerAcknowledgedAt,
+                    created_at as CreatedAt,
+                    updated_at as UpdatedAt
+                FROM users
+                WHERE email = @Email;";
+
+            return await connection.QueryFirstOrDefaultAsync<User>(sql, new { Email = email });
+        }
+
+        public async Task<bool> ConvertAnonymousToEmailAsync(Guid userId, string firebaseUid, string email)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var transaction = await connection.BeginTransactionAsync();
+
+            try
+            {
+                var sql = @"
+                    UPDATE users
+                    SET firebase_uid = @FirebaseUid,
+                        email = @Email,
+                        email_verified = false,
+                        updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+                    WHERE id = @UserId
+                    RETURNING id;";
+
+                var result = await connection.QueryFirstOrDefaultAsync<Guid?>(
+                    sql,
+                    new
+                    {
+                        UserId = userId,
+                        FirebaseUid = firebaseUid,
+                        Email = email
+                    },
+                    transaction: transaction
+                );
+
+                if (result.HasValue)
+                {
+                    await transaction.CommitAsync();
+                    _logger.LogInformation(
+                        "Converted anonymous user {UserId} to email account {Email} with Firebase UID {FirebaseUid}",
+                        userId, email, firebaseUid);
+                    return true;
+                }
+
+                await transaction.RollbackAsync();
+                _logger.LogWarning("Failed to convert user {UserId}. User may not exist.", userId);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error converting user {UserId} to email account. Transaction rolled back.", userId);
+                throw;
+            }
+        }
+
+        public async Task UpdateEmailVerificationSentAsync(Guid userId)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            var sql = @"
+                UPDATE users
+                SET email_verification_sent_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
+                    updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+                WHERE id = @UserId;";
+
+            var rowsAffected = await connection.ExecuteAsync(sql, new { UserId = userId });
+
+            if (rowsAffected > 0)
+            {
+                _logger.LogInformation("Updated email verification sent timestamp for user {UserId}", userId);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to update email verification sent for user {UserId}. User may not exist.", userId);
+            }
+        }
+
+        public async Task MarkEmailVerifiedAsync(Guid userId)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            var sql = @"
+                UPDATE users
+                SET email_verified = true,
+                    email_verified_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC',
+                    updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+                WHERE id = @UserId
+                  AND email_verified = false;";
+
+            var rowsAffected = await connection.ExecuteAsync(sql, new { UserId = userId });
+
+            if (rowsAffected > 0)
+            {
+                _logger.LogInformation("Marked email as verified for user {UserId}", userId);
+            }
         }
     }
 }
