@@ -17,7 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
-  const { markEngaged, refetchTrialStatus } = useAuth();
+  const { user, createAnonymousUser, markEngaged, refetchTrialStatus } = useAuth();
   const [formData, setFormData] = useState<CreatePetRequest>({
     name: '',
     breed: '',
@@ -73,8 +73,11 @@ const AddFirstPet = () => {
     setError(null);
 
     try {
-      const userStr = localStorage.getItem('user');
-      const userData = JSON.parse(userStr!);
+      let userData = user;
+
+      if (!userData) {
+        userData = await createAnonymousUser();
+      }
 
       const petData: CreatePetRequest = {
         name: formData.name.trim(),
@@ -84,7 +87,7 @@ const AddFirstPet = () => {
         photoBase64: undefined
       };
 
-      await createPet(userData.token, petData, userData.isAnonymous);
+      await createPet(userData.token, petData, userData.isAnonymous || false);
 
       markEngaged();
       await refetchTrialStatus();

@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { login } from '../services/emailAuthService';
-import { getAnonymousAuth } from '../services/authService';
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -71,24 +70,8 @@ const SignIn = () => {
     }
   };
 
-  const handleContinueAsGuest = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const anonymousAuth = await getAnonymousAuth();
-      const userData = {
-        ...anonymousAuth,
-        isAnonymous: true,
-      };
-      localStorage.setItem('user', JSON.stringify(userData));
-      navigate('/');
-      window.location.reload();
-    } catch (err) {
-      console.error('Failed to create guest account:', err);
-      setError('Failed to continue as guest. Please try again.');
-      setLoading(false);
-    }
+  const handleContinueAsGuest = () => {
+    navigate('/add-first-pet');
   };
 
   const handleForgotPassword = () => {

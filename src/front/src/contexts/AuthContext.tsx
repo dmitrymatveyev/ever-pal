@@ -12,6 +12,7 @@ interface AuthContextValue {
   refetchTrialStatus: () => Promise<void>;
   hasEngaged: boolean;
   markEngaged: () => void;
+  createAnonymousUser: () => Promise<UserData>;
   loginWithEmail: (token: string, userId: string, email: string, emailVerified: boolean) => void;
   logout: () => void;
   convertToEmail: (email: string, firebaseToken: string) => void;
@@ -91,6 +92,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.href = '/signin';
   };
 
+  const createAnonymousUser = async (): Promise<UserData> => {
+    const anonymousAuth = await getAnonymousAuth();
+    const userData: UserData = {
+      ...anonymousAuth,
+      isAnonymous: true
+    };
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+
+    identifyUser(anonymousAuth.userId, {
+      email: anonymousAuth.email,
+      displayName: anonymousAuth.displayName,
+      isAnonymous: true
+    });
+
+    await fetchTrialStatus(userData);
+    return userData;
+  };
+
   const convertToEmail = (email: string, firebaseToken: string) => {
     if (!user) {
       return;
@@ -120,23 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const engaged = localStorage.getItem('userEngaged') === 'true';
         setHasEngaged(engaged);
 
-        if (!userStr) {
-          const anonymousAuth = await getAnonymousAuth();
-          const userData: UserData = {
-            ...anonymousAuth,
-            isAnonymous: true
-          };
-          localStorage.setItem('user', JSON.stringify(userData));
-          setUser(userData);
-
-          identifyUser(anonymousAuth.userId, {
-            email: anonymousAuth.email,
-            displayName: anonymousAuth.displayName,
-            isAnonymous: true
-          });
-
-          await fetchTrialStatus(userData);
-        } else {
+        if (userStr) {
           const userData = JSON.parse(userStr) as UserData;
           setUser(userData);
 
@@ -171,6 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         refetchTrialStatus,
         hasEngaged,
         markEngaged,
+        createAnonymousUser,
         loginWithEmail,
         logout,
         convertToEmail,
