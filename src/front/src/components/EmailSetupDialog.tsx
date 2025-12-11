@@ -100,16 +100,13 @@ const EmailSetupDialog = ({ open, onClose, onSuccess, anonymousToken }: EmailSet
         <DialogContent sx={{ textAlign: 'center', py: 4 }}>
           <CheckCircle sx={{ fontSize: 60, color: 'success.main', mb: 2 }} />
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-            Check Your Email
+            You're all set on this device!
           </Typography>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
-            We sent a verification link to:
-          </Typography>
-          <Typography sx={{ fontWeight: 600, mb: 3 }}>
-            {email}
+            Check <strong>{email}</strong> to verify your email. Once verified, you can sign in from anywhere.
           </Typography>
           <Alert severity="info" sx={{ textAlign: 'left' }}>
-            Your account is set up, but you'll need to verify your email before you can sign in on other devices.
+            Don't worry - you can keep using EverPal while you verify.
           </Alert>
         </DialogContent>
       </Dialog>

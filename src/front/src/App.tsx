@@ -15,6 +15,7 @@ import PWAInstallDebug from './components/PWAInstallDebug';
 import DisclaimerModal from './components/DisclaimerModal';
 import PaywallScreen from './components/PaywallScreen';
 import TrialBanner from './components/TrialBanner';
+import EmailVerificationBanner from './components/EmailVerificationBanner';
 
 function AppContent() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -171,6 +172,7 @@ function AppContent() {
           />
         </Box>
 
+        <EmailVerificationBanner />
         <TrialBanner />
 
         <Router>

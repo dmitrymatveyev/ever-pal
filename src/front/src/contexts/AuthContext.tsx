@@ -82,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         localStorage.removeItem('user');
         localStorage.removeItem('selectedPetId');
+        localStorage.setItem('sessionExpiryMessage', 'Your session has expired. Please sign in again.');
         setUser(null);
         setTrialStatus(null);
         window.location.href = '/signin';
