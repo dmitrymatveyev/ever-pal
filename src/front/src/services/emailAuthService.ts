@@ -13,6 +13,7 @@ interface ConvertAnonymousResponse {
   emailVerified: boolean;
   message: string;
   firebaseToken: string;
+  refreshToken: string;
 }
 
 interface LoginRequest {
@@ -23,6 +24,7 @@ interface LoginRequest {
 interface LoginResponse {
   success: boolean;
   token: string;
+  refreshToken: string;
   userId: string;
   email: string;
   emailVerified: boolean;
@@ -98,4 +100,26 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordRespo
     },
     body: JSON.stringify({ email } as ForgotPasswordRequest),
   });
+};
+
+interface RefreshTokenResponse {
+  token: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export const refreshToken = async (refreshToken: string): Promise<RefreshTokenResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Token refresh failed');
+  }
+
+  return response.json();
 };

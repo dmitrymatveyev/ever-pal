@@ -39,7 +39,7 @@ const SignIn = () => {
 
       const userData = {
         token: response.token,
-        refreshToken: '',
+        refreshToken: response.refreshToken,
         userId: response.userId,
         email: response.email,
         displayName: email.split('@')[0],

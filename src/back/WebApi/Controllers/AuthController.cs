@@ -137,7 +137,8 @@ namespace EverPal.WebApi.Controllers
                         Email = request.Email,
                         EmailVerified = false,
                         Message = "Account converted. Please check your email to verify your account.",
-                        FirebaseToken = tokenResult.IdToken
+                        FirebaseToken = tokenResult.IdToken,
+                        RefreshToken = tokenResult.RefreshToken
                     });
                 }
                 catch (Exception ex)
@@ -189,6 +190,7 @@ namespace EverPal.WebApi.Controllers
                 {
                     Success = true,
                     Token = signInResult.IdToken,
+                    RefreshToken = signInResult.RefreshToken,
                     UserId = user.Id.ToString(),
                     Email = user.Email ?? request.Email,
                     EmailVerified = signInResult.EmailVerified,
@@ -262,5 +264,31 @@ namespace EverPal.WebApi.Controllers
 
             return Ok(new { success = true, message = "If an account exists with this email, a reset link has been sent." });
         }
+
+        [HttpPost("auth/refresh-token")]
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            try
+            {
+                var result = await _firebaseAuthService.RefreshTokenAsync(request.RefreshToken);
+                return Ok(new
+                {
+                    token = result.IdToken,
+                    refreshToken = result.RefreshToken,
+                    expiresIn = result.ExpiresIn
+                });
+            }
+            catch (FirebaseRestApiException ex)
+            {
+                _logger.LogWarning(ex, "Token refresh failed");
+                return Unauthorized(new { message = "Token refresh failed. Please sign in again." });
+            }
+        }
+    }
+
+    public class RefreshTokenRequest
+    {
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

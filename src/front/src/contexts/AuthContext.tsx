@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { getAnonymousAuth } from '../services/authService';
 import { getTrialStatus, type TrialStatus } from '../services/trialService';
 import { identifyUser } from '../utils/analytics';
+import { ApiError } from '../utils/apiClientSingleton';
 
 interface AuthContextValue {
   user: UserData | null;
@@ -13,9 +14,9 @@ interface AuthContextValue {
   hasEngaged: boolean;
   markEngaged: () => void;
   createAnonymousUser: () => Promise<UserData>;
-  loginWithEmail: (token: string, userId: string, email: string, emailVerified: boolean) => void;
+  loginWithEmail: (token: string, refreshToken: string, userId: string, email: string, emailVerified: boolean) => void;
   logout: () => void;
-  convertToEmail: (email: string, firebaseToken: string) => void;
+  convertToEmail: (email: string, firebaseToken: string, refreshToken: string) => void;
 }
 
 interface UserData {
@@ -37,7 +38,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [hasEngaged, setHasEngaged] = useState(false);
 
-  const fetchTrialStatus = async (userData: UserData) => {
+  const refreshAuthToken = async (userData: UserData): Promise<UserData | null> => {
+    if (!userData.refreshToken || userData.isAnonymous) {
+      return null;
+    }
+
+    try {
+      const { refreshToken: refreshTokenFn } = await import('../services/emailAuthService');
+      const result = await refreshTokenFn(userData.refreshToken);
+
+      const updatedUser = {
+        ...userData,
+        token: result.token,
+        refreshToken: result.refreshToken,
+      };
+
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      return null;
+    }
+  };
+
+  const fetchTrialStatus = async (userData: UserData, isRetry = false) => {
     try {
       const status = await getTrialStatus(userData.token, userData.isAnonymous || false);
       setTrialStatus(status);
@@ -48,6 +73,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(updatedUser);
       }
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401 && !isRetry) {
+        const refreshedUser = await refreshAuthToken(userData);
+        if (refreshedUser) {
+          await fetchTrialStatus(refreshedUser, true);
+          return;
+        }
+
+        localStorage.removeItem('user');
+        localStorage.removeItem('selectedPetId');
+        setUser(null);
+        setTrialStatus(null);
+        window.location.href = '/signin';
+        return;
+      }
       console.error('Failed to fetch trial status:', err);
       setError(err instanceof Error ? err.message : 'Failed to load trial status');
     }
@@ -65,10 +104,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('userEngaged', 'true');
   };
 
-  const loginWithEmail = (token: string, userId: string, email: string, emailVerified: boolean) => {
+  const loginWithEmail = (token: string, refreshToken: string, userId: string, email: string, emailVerified: boolean) => {
     const userData: UserData = {
       token,
-      refreshToken: '',
+      refreshToken,
       userId,
       email,
       displayName: email.split('@')[0],
@@ -111,13 +150,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return userData;
   };
 
-  const convertToEmail = (email: string, firebaseToken: string) => {
+  const convertToEmail = (email: string, firebaseToken: string, refreshToken: string) => {
     if (!user) {
       return;
     }
     const userData: UserData = {
       ...user,
       token: firebaseToken,
+      refreshToken,
       email,
       isAnonymous: false,
       emailVerified: false,

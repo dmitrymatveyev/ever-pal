@@ -16,5 +16,6 @@ namespace EverPal.WebApi.Services
         Task SendPasswordResetEmailAsync(string email);
         Task SendEmailVerificationAsync(string idToken);
         Task<FirebaseSignInResult> ExchangeCustomTokenAsync(string customToken);
+        Task<FirebaseSignInResult> RefreshTokenAsync(string refreshToken);
     }
 }

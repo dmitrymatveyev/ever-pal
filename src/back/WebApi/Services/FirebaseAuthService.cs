@@ -185,6 +185,44 @@ namespace EverPal.WebApi.Services
             return result ?? throw new InvalidOperationException("Failed to deserialize Firebase response");
         }
 
+        public async Task<FirebaseSignInResult> RefreshTokenAsync(string refreshToken)
+        {
+            var requestBody = new
+            {
+                grant_type = "refresh_token",
+                refresh_token = refreshToken
+            };
+
+            var response = await _httpClient.PostAsJsonAsync(
+                $"https://securetoken.googleapis.com/v1/token?key={_apiKey}",
+                requestBody
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new FirebaseRestApiException("Token refresh failed", "REFRESH_FAILED");
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<FirebaseRefreshResult>();
+            return new FirebaseSignInResult
+            {
+                IdToken = result?.IdToken ?? "",
+                RefreshToken = result?.RefreshToken ?? "",
+                ExpiresIn = int.TryParse(result?.ExpiresIn, out var exp) ? exp : 3600
+            };
+        }
+
+        private class FirebaseRefreshResult
+        {
+            [System.Text.Json.Serialization.JsonPropertyName("id_token")]
+            public string IdToken { get; set; } = string.Empty;
+            [System.Text.Json.Serialization.JsonPropertyName("refresh_token")]
+            public string RefreshToken { get; set; } = string.Empty;
+            [System.Text.Json.Serialization.JsonPropertyName("expires_in")]
+            public string ExpiresIn { get; set; } = string.Empty;
+        }
+
         private class FirebaseErrorResponse
         {
             public FirebaseError? Error { get; set; }

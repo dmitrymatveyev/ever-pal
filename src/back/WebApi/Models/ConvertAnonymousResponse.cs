@@ -8,5 +8,6 @@ namespace EverPal.WebApi.Models
         public bool EmailVerified { get; set; }
         public string Message { get; set; } = string.Empty;
         public string FirebaseToken { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

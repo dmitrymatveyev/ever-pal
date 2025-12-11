@@ -23,7 +23,7 @@ import { ApiError } from '../utils/apiClientSingleton';
 interface EmailSetupDialogProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: (email: string, token: string) => void;
+  onSuccess: (email: string, token: string, refreshToken: string) => void;
   anonymousToken: string;
 }
 
@@ -63,7 +63,7 @@ const EmailSetupDialog = ({ open, onClose, onSuccess, anonymousToken }: EmailSet
       setShowVerificationMessage(true);
 
       setTimeout(() => {
-        onSuccess(response.email, response.firebaseToken);
+        onSuccess(response.email, response.firebaseToken, response.refreshToken);
       }, 3000);
     } catch (err) {
       console.error('Failed to convert account:', err);

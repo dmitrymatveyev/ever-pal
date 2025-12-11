@@ -429,8 +429,8 @@ const HealthJournal = () => {
     setEmailSetupOpen(false);
   };
 
-  const handleEmailSetupSuccess = (email: string, firebaseToken: string) => {
-    convertToEmail(email, firebaseToken);
+  const handleEmailSetupSuccess = (email: string, firebaseToken: string, refreshToken: string) => {
+    convertToEmail(email, firebaseToken, refreshToken);
     setEmailSetupOpen(false);
   };
 

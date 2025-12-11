@@ -74,7 +74,7 @@ class ApiClient {
         }
 
         // Check if response is ok
-        if (!response.ok && attempt < this.maxRetries - 1) {
+        if (!response.ok && attempt < this.maxRetries - 1 && response.status !== 401) {
           // Wait before retrying (exponential backoff)
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
           continue;
