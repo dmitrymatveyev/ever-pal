@@ -13,11 +13,19 @@ namespace EverPal.WebApi.Controllers
     public class HealthLogsController : ControllerBase
     {
         private readonly IHealthLogService _healthLogService;
+        private readonly IPdfExportService _pdfExportService;
+        private readonly IUserService _userService;
         private readonly ILogger<HealthLogsController> _logger;
 
-        public HealthLogsController(IHealthLogService healthLogService, ILogger<HealthLogsController> logger)
+        public HealthLogsController(
+            IHealthLogService healthLogService,
+            IPdfExportService pdfExportService,
+            IUserService userService,
+            ILogger<HealthLogsController> logger)
         {
             _healthLogService = healthLogService;
+            _pdfExportService = pdfExportService;
+            _userService = userService;
             _logger = logger;
         }
 
@@ -129,6 +137,39 @@ namespace EverPal.WebApi.Controllers
             {
                 _logger.LogError(ex, "Error deleting health log");
                 return BadRequest(new { message = "Failed to delete health log", error = ex.Message });
+            }
+        }
+
+        [HttpPost("export-pdf")]
+        public async Task<IActionResult> ExportPdf([FromBody] ExportPdfRequest request)
+        {
+            try
+            {
+                var userId = User.GetUserId();
+
+                var hasAccess = await _userService.IsTrialActiveAsync(userId.ToString()) ||
+                                await _userService.HasPaidAccessAsync(userId.ToString());
+
+                if (!hasAccess)
+                {
+                    return StatusCode(402, new { message = "Trial expired. Please upgrade to continue using EverPal." });
+                }
+
+                var pdfBytes = await _pdfExportService.GeneratePdfReportAsync(userId, request);
+
+                var fileName = $"health-report-{DateTime.UtcNow:yyyy-MM-dd}.pdf";
+
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Unauthorized access attempt to export PDF for pet {PetId}", request.PetId);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting PDF for pet {PetId}", request.PetId);
+                return BadRequest(new { message = "Failed to generate PDF report", error = ex.Message });
             }
         }
     }

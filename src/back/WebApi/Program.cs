@@ -3,7 +3,10 @@ using EverPal.WebApi.Middlewares;
 using EverPal.WebApi.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
 using System.Text.Json;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +72,9 @@ builder.Services.AddSingleton<ITagService, TagService>();
 
 // Register the User Service
 builder.Services.AddSingleton<IUserService, UserService>();
+
+// Register the PDF Export Service
+builder.Services.AddSingleton<IPdfExportService, PdfExportService>();
 
 // Configure Stripe
 Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];

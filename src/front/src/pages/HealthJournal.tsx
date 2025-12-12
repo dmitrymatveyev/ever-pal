@@ -29,6 +29,7 @@ import EditPetDialog from '../components/EditPetDialog';
 import PhotoViewerDialog from '../components/PhotoViewerDialog';
 import AccountMenuDialog from '../components/AccountMenuDialog';
 import EmailSetupDialog from '../components/EmailSetupDialog';
+import PDFExportButton from '../components/PDFExportButton';
 import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../utils/demoData';
 import { trackEvent } from '../utils/analytics';
 import { useAuth } from '../contexts/AuthContext';
@@ -616,22 +617,32 @@ const HealthJournal = () => {
                 Track {selectedPet?.name}'s daily journey
               </Typography>
             </Box>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<Add />}
-              onClick={openAddLogDialog}
-              disabled={!selectedPetId}
-              sx={{
-                width: { xs: '100%', sm: 'auto' },
-                boxShadow: 2,
-                '&:hover': {
-                  boxShadow: 4,
-                },
-              }}
-            >
-              Add Entry
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
+              {selectedPet && (
+                <PDFExportButton
+                  petId={selectedPet.id}
+                  petName={selectedPet.name}
+                  variant="outlined"
+                  size="large"
+                  fullWidth={false}
+                />
+              )}
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<Add />}
+                onClick={openAddLogDialog}
+                disabled={!selectedPetId}
+                sx={{
+                  boxShadow: 2,
+                  '&:hover': {
+                    boxShadow: 4,
+                  },
+                }}
+              >
+                Add Entry
+              </Button>
+            </Box>
           </Box>
         )}
 
