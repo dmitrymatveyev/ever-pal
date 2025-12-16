@@ -32,6 +32,11 @@ interface AddLogEventDialogProps {
   onClose: () => void;
   petId: string;
   onLogAdded: () => void;
+  initialData?: {
+    logType?: string;
+    tags?: Tag[];
+    entryText?: string;
+  };
 }
 
 interface LogTypeOption {
@@ -49,7 +54,7 @@ const LOG_TYPES: LogTypeOption[] = [
   { value: 'general', label: 'General', icon: '🐾' },
 ];
 
-const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDialogProps) => {
+const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: AddLogEventDialogProps) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -83,6 +88,24 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
       fetchPetName();
     }
   }, [open, petId]);
+
+  useEffect(() => {
+    if (open) {
+      if (initialData) {
+        setSelectedLogType(initialData.logType || null);
+        setSelectedTags(initialData.tags || []);
+        setNotes(initialData.entryText || '');
+      } else {
+        setSelectedLogType(null);
+        setSelectedTags([]);
+        setNotes('');
+      }
+      setPhotoBase64(null);
+      setSelectedDate(dayjs());
+      setSelectedTime(dayjs());
+      setError(null);
+    }
+  }, [open, initialData]);
 
   useEffect(() => {
     if (selectedLogType) {
@@ -201,6 +224,8 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded }: AddLogEventDial
       setSelectedTags([]);
       setNotes('');
       setPhotoBase64(null);
+      setSelectedDate(dayjs());
+      setSelectedTime(dayjs());
       onClose();
     }
   };

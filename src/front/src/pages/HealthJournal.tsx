@@ -17,9 +17,10 @@ import {
   IconButton,
   Avatar,
   Chip,
-  Snackbar
+  Snackbar,
+  Menu
 } from '@mui/material';
-import { Add, Pets, Edit, Delete, Settings, CameraAlt, AccountCircle } from '@mui/icons-material';
+import { Add, Pets, Edit, Delete, Settings, CameraAlt, AccountCircle, ContentCopy, MoreVert } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
 import { getHealthLogs, deleteHealthLog, type HealthLog } from '../services/healthLogService';
 import AddPetDialog from '../components/AddPetDialog';
@@ -59,10 +60,12 @@ const HealthJournal = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<string>('');
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [emailSetupOpen, setEmailSetupOpen] = useState(false);
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<{ element: HTMLElement; logId: string } | null>(null);
 
   // Dialog states derived from URL params
   const dialog = searchParams.get('dialog');
   const logId = searchParams.get('logId');
+  const copyFrom = searchParams.get('copyFrom');
 
   const addPetDialogOpen = dialog === 'add-pet';
   const addLogDialogOpen = dialog === 'add-log';
@@ -215,6 +218,15 @@ const HealthJournal = () => {
     setSearchParams({ dialog: 'edit-log', logId: log.id });
   };
 
+  const handleCopyClick = (log: HealthLog) => {
+    if (demoMode) {
+      setDemoModeSnackbar(true);
+      trackEvent('demo_mode_action_blocked', { action: 'copy_log' });
+      return;
+    }
+    setSearchParams({ dialog: 'add-log', copyFrom: log.id });
+  };
+
   const handleLogUpdated = async () => {
     if (!selectedPetId || !userData) {
       return;
@@ -252,6 +264,29 @@ const HealthJournal = () => {
       console.error('Failed to delete health log:', err);
       setError('Failed to delete health log. Please try again.');
     }
+  };
+
+  const handleActionMenuOpen = (event: React.MouseEvent<HTMLElement>, logId: string) => {
+    setActionMenuAnchor({ element: event.currentTarget, logId });
+  };
+
+  const handleActionMenuClose = () => {
+    setActionMenuAnchor(null);
+  };
+
+  const handleMenuCopy = () => {
+    if (!actionMenuAnchor) return;
+    const log = healthLogs.find(l => l.id === actionMenuAnchor.logId);
+    if (log) {
+      handleCopyClick(log);
+    }
+    handleActionMenuClose();
+  };
+
+  const handleMenuDelete = () => {
+    if (!actionMenuAnchor) return;
+    handleDeleteClick(actionMenuAnchor.logId);
+    handleActionMenuClose();
   };
 
   const formatDateHeader = (dateString: string) => {
@@ -833,11 +868,11 @@ const HealthJournal = () => {
                             </IconButton>
                             <IconButton
                               size="small"
-                              aria-label="delete"
-                              onClick={() => handleDeleteClick(log.id)}
-                              sx={{ color: 'error.main' }}
+                              aria-label="more actions"
+                              onClick={(e) => handleActionMenuOpen(e, log.id)}
+                              sx={{ color: 'text.secondary' }}
                             >
-                              <Delete fontSize="small" />
+                              <MoreVert fontSize="small" />
                             </IconButton>
                           </Box>
                         </Box>
@@ -877,6 +912,7 @@ const HealthJournal = () => {
           onClose={closeDialog}
           petId={selectedPetId}
           onLogAdded={handleLogAdded}
+          initialData={copyFrom ? healthLogs.find(l => l.id === copyFrom) : undefined}
         />
       )}
 
@@ -931,6 +967,30 @@ const HealthJournal = () => {
           anonymousToken={user.token}
         />
       )}
+
+      {/* Action Menu */}
+      <Menu
+        anchorEl={actionMenuAnchor?.element}
+        open={Boolean(actionMenuAnchor)}
+        onClose={handleActionMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={handleMenuCopy}>
+          <ContentCopy fontSize="small" sx={{ mr: 1 }} />
+          Copy Entry
+        </MenuItem>
+        <MenuItem onClick={handleMenuDelete} sx={{ color: 'error.main' }}>
+          <Delete fontSize="small" sx={{ mr: 1 }} />
+          Delete
+        </MenuItem>
+      </Menu>
     </Box>
   );
 };
