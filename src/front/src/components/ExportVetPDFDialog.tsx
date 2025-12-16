@@ -163,7 +163,7 @@ const ExportVetPDFDialog = ({ open, onClose, petId, petName }: ExportVetPDFDialo
         ) : (
           <Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Generate a professional PDF report of {petName}'s health logs to share with your veterinarian.
+              Create a complete symptom timeline that helps your vet diagnose and treat {petName}.
             </Typography>
 
             <FormControl component="fieldset" sx={{ mb: 3, width: '100%' }}>

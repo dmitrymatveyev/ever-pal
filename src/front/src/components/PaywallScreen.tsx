@@ -62,7 +62,7 @@ const PaywallScreen = () => {
         }}
       >
         <Typography variant="h4" gutterBottom align="center">
-          Don't Lose Your Health Journal
+          Keep Tracking Your Pet's Health
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph align="center">
           Your 7-day trial has ended. Keep all your pet's health data with lifetime access.
@@ -93,19 +93,19 @@ const PaywallScreen = () => {
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Unlimited health logs" />
+                <ListItemText primary="Export unlimited vet-ready PDF reports" />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Photo uploads & tracking" />
+                <ListItemText primary="Unlimited health logs with photos" />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Multiple pets" />
+                <ListItemText primary="Track multiple pets" />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
@@ -117,7 +117,7 @@ const PaywallScreen = () => {
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Founding Member badge" />
+                <ListItemText primary="Priority support" />
               </ListItem>
             </List>
 

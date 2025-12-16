@@ -54,9 +54,9 @@ const TrialBanner = () => {
     >
       <Box>
         <strong>
-          Trial: {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining
+          Trial: {daysLeft} day{daysLeft === 1 ? '' : 's'} left
         </strong>
-        {' '}- Upgrade to lifetime access for ${LIFETIME_PRICE} (limited to first 20 customers)
+        {' '}- Keep unlimited PDF exports and symptom tracking: ${LIFETIME_PRICE} lifetime
       </Box>
     </Alert>
   );

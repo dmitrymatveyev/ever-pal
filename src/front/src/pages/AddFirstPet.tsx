@@ -129,7 +129,7 @@ const AddFirstPet = () => {
           Welcome to EverPal 🐾
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400 }}>
-          Track your pet's health and wellness
+          Track symptoms. Share with your vet.
         </Typography>
         <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
           Let's start by adding your companion to the journal.

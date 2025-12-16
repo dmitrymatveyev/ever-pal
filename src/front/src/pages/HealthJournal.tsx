@@ -649,7 +649,7 @@ const HealthJournal = () => {
                 Journal
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                Track {selectedPet?.name}'s daily journey
+                Track {selectedPet?.name}'s health
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
@@ -694,8 +694,7 @@ const HealthJournal = () => {
               Start {selectedPet?.name}'s health journal
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-              Keep track of daily observations, symptoms, and special moments.
-              It helps you notice patterns and share updates with your vet.
+              Log symptoms, meals, and medications. Spot patterns and export reports for your vet.
             </Typography>
             <Button
               variant="contained"
