@@ -11,7 +11,9 @@ import {
   Grid,
   Card,
   CardMedia,
-  ButtonGroup
+  ButtonGroup,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import { ArrowBack, Edit, Save, Cancel } from '@mui/icons-material';
 import { getPets, updatePet, type Pet } from '../services/petService';
@@ -33,7 +35,8 @@ const PetProfile = () => {
     name: '',
     breed: '',
     age: '',
-    weight: ''
+    weight: '',
+    weightUnit: 'lbs' as 'lbs' | 'kg'
   });
   const [saving, setSaving] = useState(false);
 
@@ -55,7 +58,8 @@ const PetProfile = () => {
             name: foundPet.name,
             breed: foundPet.breed || '',
             age: foundPet.age?.toString() || '',
-            weight: foundPet.weight?.toString() || ''
+            weight: foundPet.weight?.toString() || '',
+            weightUnit: foundPet.weightUnit || 'lbs'
           });
         }
       } catch (err) {
@@ -87,7 +91,8 @@ const PetProfile = () => {
         name: pet.name,
         breed: pet.breed || '',
         age: pet.age?.toString() || '',
-        weight: pet.weight?.toString() || ''
+        weight: pet.weight?.toString() || '',
+        weightUnit: pet.weightUnit || 'lbs'
       });
     }
   };
@@ -104,7 +109,8 @@ const PetProfile = () => {
         name: editForm.name.trim(),
         breed: editForm.breed.trim() || undefined,
         age: editForm.age ? parseInt(editForm.age, 10) : undefined,
-        weight: editForm.weight ? parseFloat(editForm.weight) : undefined
+        weight: editForm.weight ? parseFloat(editForm.weight) : undefined,
+        weightUnit: editForm.weightUnit
       };
 
       // Call the API to update the pet
@@ -265,23 +271,45 @@ const PetProfile = () => {
             )}
           </Grid>
           
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               Weight
             </Typography>
             {isEditing ? (
-              <TextField
-                type="number"
-                value={editForm.weight}
-                onChange={(e) => handleFormChange('weight', e.target.value)}
-                placeholder="Enter weight"
-                size="small"
-                fullWidth
-                inputProps={{ min: 0, step: 0.1 }}
-              />
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                <TextField
+                  type="number"
+                  value={editForm.weight}
+                  onChange={(e) => handleFormChange('weight', e.target.value)}
+                  placeholder={editForm.weightUnit === 'lbs' ? 'e.g., 12' : 'e.g., 5.5'}
+                  size="small"
+                  fullWidth
+                  inputProps={{ min: 0, step: 0.1 }}
+                />
+                <ToggleButtonGroup
+                  value={editForm.weightUnit}
+                  exclusive
+                  onChange={(_, newUnit) => {
+                    if (newUnit !== null) {
+                      setEditForm(prev => ({ ...prev, weightUnit: newUnit as 'lbs' | 'kg' }));
+                    }
+                  }}
+                  size="small"
+                  sx={{ minWidth: 120 }}
+                >
+                  <ToggleButton value="lbs" sx={{ px: 2 }}>
+                    lbs
+                  </ToggleButton>
+                  <ToggleButton value="kg" sx={{ px: 2 }}>
+                    kg
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
             ) : (
               <Typography variant="body1">
-                {pet.weight !== null && pet.weight !== undefined ? pet.weight : 'Not specified'}
+                {pet.weight !== null && pet.weight !== undefined
+                  ? `${pet.weight} ${pet.weightUnit || 'lbs'}`
+                  : 'Not specified'}
               </Typography>
             )}
           </Grid>

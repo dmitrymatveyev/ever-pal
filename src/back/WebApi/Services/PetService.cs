@@ -26,9 +26,9 @@ namespace EverPal.WebApi.Services
             using var connection = new NpgsqlConnection(_connectionString);
 
             var sql = @"
-                INSERT INTO pets (owner_id, name, photo_url, photo_base64, breed, weight, age)
-                VALUES (@OwnerId, @Name, @PhotoUrl, @PhotoBase64, @Breed, @Weight, @Age)
-                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt;";
+                INSERT INTO pets (owner_id, name, photo_url, photo_base64, breed, weight, weight_unit, age)
+                VALUES (@OwnerId, @Name, @PhotoUrl, @PhotoBase64, @Breed, @Weight, @WeightUnit, @Age)
+                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, weight_unit as WeightUnit, age, created_at as CreatedAt, updated_at as UpdatedAt;";
 
             var pet = await connection.QuerySingleAsync<Pet>(sql, new
             {
@@ -38,6 +38,7 @@ namespace EverPal.WebApi.Services
                 PhotoBase64 = request.PhotoBase64,
                 Breed = request.Breed,
                 Weight = request.Weight,
+                WeightUnit = request.WeightUnit ?? "lbs",
                 Age = request.Age
             });
 
@@ -52,7 +53,7 @@ namespace EverPal.WebApi.Services
             using var connection = new NpgsqlConnection(_connectionString);
 
             var sql = @"
-                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
+                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, weight_unit as WeightUnit, age, created_at as CreatedAt, updated_at as UpdatedAt
                 FROM pets
                 WHERE id = @PetId AND owner_id = @OwnerId AND deleted_at IS NULL;";
 
@@ -70,7 +71,7 @@ namespace EverPal.WebApi.Services
             using var connection = new NpgsqlConnection(_connectionString);
 
             var sql = @"
-                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt
+                SELECT id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, weight_unit as WeightUnit, age, created_at as CreatedAt, updated_at as UpdatedAt
                 FROM pets
                 WHERE owner_id = @OwnerId AND deleted_at IS NULL
                 ORDER BY created_at DESC;";
@@ -118,6 +119,11 @@ namespace EverPal.WebApi.Services
                 setParts.Add("weight = @Weight");
                 parameters.Add("Weight", request.Weight);
             }
+            if (request.WeightUnit != null)
+            {
+                setParts.Add("weight_unit = @WeightUnit");
+                parameters.Add("WeightUnit", request.WeightUnit);
+            }
             if (request.Age.HasValue)
             {
                 setParts.Add("age = @Age");
@@ -133,7 +139,7 @@ namespace EverPal.WebApi.Services
                 UPDATE pets
                 SET {string.Join(", ", setParts)}
                 WHERE id = @PetId AND owner_id = @OwnerId AND deleted_at IS NULL
-                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, age, created_at as CreatedAt, updated_at as UpdatedAt;";
+                RETURNING id, owner_id as OwnerId, name, photo_url as PhotoUrl, photo_base64 as PhotoBase64, breed, weight, weight_unit as WeightUnit, age, created_at as CreatedAt, updated_at as UpdatedAt;";
 
             var pet = await connection.QuerySingleOrDefaultAsync<Pet>(sql, parameters);
             return pet;

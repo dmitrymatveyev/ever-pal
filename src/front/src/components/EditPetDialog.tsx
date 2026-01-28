@@ -13,6 +13,8 @@ import {
   Avatar,
   useMediaQuery,
   useTheme,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import { PhotoCamera, Pets } from '@mui/icons-material';
 import { updatePet, deletePet, type UpdatePetRequest, type Pet } from '../services/petService';
@@ -34,6 +36,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
     breed: '',
     age: '',
     weight: '',
+    weightUnit: 'lbs' as 'lbs' | 'kg',
     photoBase64: ''
   });
   const [saving, setSaving] = useState(false);
@@ -50,6 +53,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
         breed: pet.breed || '',
         age: pet.age?.toString() || '',
         weight: pet.weight?.toString() || '',
+        weightUnit: pet.weightUnit || 'lbs',
         photoBase64: pet.photoBase64 || ''
       });
       setPhotoFileName(pet.photoBase64 ? 'Current photo' : '');
@@ -110,6 +114,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
         breed: formData.breed?.trim() || undefined,
         age: formData.age ? parseInt(formData.age, 10) : undefined,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
+        weightUnit: formData.weightUnit,
         photoBase64: formData.photoBase64?.trim() || undefined
       };
 
@@ -239,19 +244,19 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
               disabled={saving}
               placeholder="e.g., Golden Retriever"
             />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="Age (years)"
-                type="number"
-                value={formData.age}
-                onChange={(e) => handleChange('age', e.target.value)}
-                inputProps={{ min: 0 }}
-                fullWidth
-                disabled={saving}
-              />
+            <TextField
+              label="Age (years)"
+              type="number"
+              value={formData.age}
+              onChange={(e) => handleChange('age', e.target.value)}
+              inputProps={{ min: 0 }}
+              fullWidth
+              disabled={saving}
+            />
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
               <TextField
                 label="Weight"
-                placeholder="e.g., 12 lbs or 5.5 kg"
+                placeholder={formData.weightUnit === 'lbs' ? 'e.g., 12' : 'e.g., 5.5'}
                 type="number"
                 value={formData.weight}
                 onChange={(e) => handleChange('weight', e.target.value)}
@@ -259,6 +264,24 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
                 fullWidth
                 disabled={saving}
               />
+              <ToggleButtonGroup
+                value={formData.weightUnit}
+                exclusive
+                onChange={(_, newUnit) => {
+                  if (newUnit !== null) {
+                    setFormData(prev => ({ ...prev, weightUnit: newUnit as 'lbs' | 'kg' }));
+                  }
+                }}
+                disabled={saving}
+                sx={{ minWidth: 120 }}
+              >
+                <ToggleButton value="lbs" sx={{ px: 2 }}>
+                  lbs
+                </ToggleButton>
+                <ToggleButton value="kg" sx={{ px: 2 }}>
+                  kg
+                </ToggleButton>
+              </ToggleButtonGroup>
             </Box>
           </Box>
         </DialogContent>

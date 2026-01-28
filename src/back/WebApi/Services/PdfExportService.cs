@@ -197,7 +197,7 @@ namespace EverPal.WebApi.Services
                         col.Item().PaddingTop(5).Row(row =>
                         {
                             row.ConstantItem(120).Text("Weight:").SemiBold();
-                            row.RelativeItem().Text($"{pet.Weight} lbs");
+                            row.RelativeItem().Text($"{pet.Weight} {pet.WeightUnit ?? "lbs"}");
                         });
                     }
 

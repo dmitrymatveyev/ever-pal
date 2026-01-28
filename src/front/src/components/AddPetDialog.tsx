@@ -12,7 +12,9 @@ import {
   Avatar,
   Typography,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import { Pets, PhotoCamera } from '@mui/icons-material';
 import { createPet, type CreatePetRequest } from '../services/petService';
@@ -32,6 +34,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
     breed: '',
     age: undefined,
     weight: undefined,
+    weightUnit: 'lbs',
     photoBase64: undefined
   });
   const [saving, setSaving] = useState(false);
@@ -89,6 +92,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
         breed: formData.breed?.trim() || undefined,
         age: formData.age || undefined,
         weight: formData.weight || undefined,
+        weightUnit: formData.weightUnit || 'lbs',
         photoBase64: formData.photoBase64 || undefined
       };
 
@@ -100,6 +104,7 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
         breed: '',
         age: undefined,
         weight: undefined,
+        weightUnit: 'lbs',
         photoBase64: undefined
       });
       setPhotoFileName('');
@@ -212,16 +217,36 @@ const AddPetDialog = ({ open, onClose, onPetAdded }: AddPetDialogProps) => {
             fullWidth
             disabled={saving}
           />
-          <TextField
-            label="Weight"
-            placeholder="e.g., 12 lbs or 5.5 kg"
-            type="number"
-            value={formData.weight || ''}
-            onChange={(e) => handleChange('weight', e.target.value)}
-            inputProps={{ min: 0, step: 0.1 }}
-            fullWidth
-            disabled={saving}
-          />
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+            <TextField
+              label="Weight"
+              placeholder={formData.weightUnit === 'lbs' ? 'e.g., 12' : 'e.g., 5.5'}
+              type="number"
+              value={formData.weight || ''}
+              onChange={(e) => handleChange('weight', e.target.value)}
+              inputProps={{ min: 0, step: 0.1 }}
+              fullWidth
+              disabled={saving}
+            />
+            <ToggleButtonGroup
+              value={formData.weightUnit}
+              exclusive
+              onChange={(_, newUnit) => {
+                if (newUnit !== null) {
+                  setFormData(prev => ({ ...prev, weightUnit: newUnit as 'lbs' | 'kg' }));
+                }
+              }}
+              disabled={saving}
+              sx={{ minWidth: 120 }}
+            >
+              <ToggleButton value="lbs" sx={{ px: 2 }}>
+                lbs
+              </ToggleButton>
+              <ToggleButton value="kg" sx={{ px: 2 }}>
+                kg
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, gap: 1, flexWrap: 'wrap' }}>

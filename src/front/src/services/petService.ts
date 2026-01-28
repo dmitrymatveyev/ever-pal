@@ -9,6 +9,7 @@ export interface Pet {
   photoBase64?: string;
   breed?: string;
   weight?: number;
+  weightUnit?: 'lbs' | 'kg';
   age?: number;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +21,7 @@ export interface CreatePetRequest {
   photoBase64?: string;
   breed?: string;
   weight?: number;
+  weightUnit?: 'lbs' | 'kg';
   age?: number;
 }
 
@@ -29,6 +31,7 @@ export interface UpdatePetRequest {
   photoBase64?: string;
   breed?: string;
   weight?: number;
+  weightUnit?: 'lbs' | 'kg';
   age?: number;
 }
 
