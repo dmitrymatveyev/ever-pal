@@ -423,5 +423,28 @@ namespace EverPal.WebApi.Services
                 _logger.LogInformation("Marked email as verified for user {UserId}", userId);
             }
         }
+
+        public async Task<bool> UpdateEmailAsync(string userId, string email)
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+
+            var sql = @"
+                UPDATE users
+                SET email = @Email,
+                    updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC'
+                WHERE id = @UserId::uuid
+                RETURNING id;";
+
+            var result = await connection.QueryFirstOrDefaultAsync<Guid?>(sql, new { UserId = userId, Email = email });
+
+            if (result.HasValue)
+            {
+                _logger.LogInformation("Updated email for user {UserId} to {Email}", userId, email);
+                return true;
+            }
+
+            _logger.LogWarning("Failed to update email for user {UserId}. User may not exist.", userId);
+            return false;
+        }
     }
 }

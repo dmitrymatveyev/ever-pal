@@ -11,9 +11,11 @@ import {
   Link
 } from '@mui/material';
 import { createPet, type CreatePetRequest } from '../services/petService';
+import { updateUserEmail } from '../services/userService';
 import { trackEvent, trackPageView, trackFormInteraction, trackFormSubmit } from '../utils/analytics';
 import { enableDemoMode } from '../utils/demoData';
 import { useAuth } from '../contexts/AuthContext';
+import TrialStartEmailModal from '../components/TrialStartEmailModal';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
@@ -27,6 +29,8 @@ const AddFirstPet = () => {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [createdPetName, setCreatedPetName] = useState('');
   const pageLoadTime = useRef<Date>(new Date());
 
   // Track page view on mount
@@ -98,7 +102,15 @@ const AddFirstPet = () => {
         timeSpentSeconds: Math.floor((new Date().getTime() - pageLoadTime.current.getTime()) / 1000)
       });
 
-      navigate('/');
+      // Check if we should show Layer 1 email modal
+      const emailModalShown = localStorage.getItem('emailModalLayer1Shown');
+      if (!emailModalShown && (!userData.email || userData.email.includes('@anonymous'))) {
+        setCreatedPetName(petData.name);
+        setShowEmailModal(true);
+        localStorage.setItem('emailModalLayer1Shown', 'true');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       console.error('Failed to create pet:', err);
       setError('Failed to create pet. Please try again.');
@@ -119,6 +131,25 @@ const AddFirstPet = () => {
 
     // Enable demo mode and navigate to health journal
     enableDemoMode();
+    navigate('/');
+  };
+
+  const handleEmailSubmit = async (email: string) => {
+    if (!user) {
+      return;
+    }
+
+    await updateUserEmail(user.token, email, user.isAnonymous || false);
+
+    // Update user in localStorage
+    const updatedUser = { ...user, email };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+    navigate('/');
+  };
+
+  const handleEmailModalClose = () => {
+    setShowEmailModal(false);
     navigate('/');
   };
 
@@ -217,6 +248,14 @@ const AddFirstPet = () => {
           </Box>
         </Box>
       </Paper>
+
+      {/* Layer 1: Email Collection Modal */}
+      <TrialStartEmailModal
+        open={showEmailModal}
+        onClose={handleEmailModalClose}
+        onEmailSubmit={handleEmailSubmit}
+        petName={createdPetName}
+      />
     </Box>
   );
 };

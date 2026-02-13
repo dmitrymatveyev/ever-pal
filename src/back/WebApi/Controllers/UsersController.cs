@@ -85,5 +85,62 @@ namespace EverPal.WebApi.Controllers
                 return StatusCode(500, new { message = "Failed to acknowledge disclaimer", error = ex.Message });
             }
         }
+
+        [HttpPut("email")]
+        public async Task<IActionResult> UpdateEmail([FromBody] UpdateEmailRequest request)
+        {
+            var userId = User.FindFirst("user_id")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("Email update attempted without valid user_id claim");
+                return Unauthorized(new { message = "User ID not found in token" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest(new { message = "Email is required" });
+            }
+
+            // Basic email validation
+            if (!IsValidEmail(request.Email))
+            {
+                return BadRequest(new { message = "Invalid email format" });
+            }
+
+            try
+            {
+                var success = await _userService.UpdateEmailAsync(userId, request.Email);
+                if (!success)
+                {
+                    return NotFound(new { message = "User not found" });
+                }
+
+                _logger.LogInformation("User {UserId} successfully updated email to {Email}", userId, request.Email);
+                return Ok(new { message = "Email updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating email for user {UserId}", userId);
+                return StatusCode(500, new { message = "Failed to update email", error = ex.Message });
+            }
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    public class UpdateEmailRequest
+    {
+        public string Email { get; set; } = string.Empty;
     }
 }

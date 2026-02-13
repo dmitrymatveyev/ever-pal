@@ -31,9 +31,11 @@ import PhotoViewerDialog from '../components/PhotoViewerDialog';
 import AccountMenuDialog from '../components/AccountMenuDialog';
 import EmailSetupDialog from '../components/EmailSetupDialog';
 import PDFExportButton from '../components/PDFExportButton';
+import TrialCheckInBanner from '../components/TrialCheckInBanner';
 import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../utils/demoData';
 import { trackEvent } from '../utils/analytics';
 import { useAuth } from '../contexts/AuthContext';
+import { updateUserEmail } from '../services/userService';
 
 interface UserData {
   email: string;
@@ -61,6 +63,7 @@ const HealthJournal = () => {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [emailSetupOpen, setEmailSetupOpen] = useState(false);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ element: HTMLElement; logId: string } | null>(null);
+  const [showLayer2Banner, setShowLayer2Banner] = useState(false);
 
   // Dialog states derived from URL params
   const dialog = searchParams.get('dialog');
@@ -149,6 +152,15 @@ const HealthJournal = () => {
         // Fetch initial 50 logs (approximately 14 days of entries)
         const logs = await getHealthLogs(selectedPetId, userData.token!, userData.isAnonymous, 50, 0);
         setHealthLogs(logs);
+
+        // Layer 2: Check if we should show email banner
+        // Show if: 3+ logs AND no email AND not shown this session AND not demo mode
+        const hasEmail = userData.email && !userData.email.includes('@anonymous');
+        const layer2ShownThisSession = sessionStorage.getItem('emailBannerLayer2Shown');
+
+        if (!demoMode && !hasEmail && logs.length >= 3 && !layer2ShownThisSession) {
+          setShowLayer2Banner(true);
+        }
       } catch (err) {
         console.error('Failed to fetch health logs:', err);
         setError('Failed to load health logs');
@@ -158,7 +170,7 @@ const HealthJournal = () => {
     };
 
     fetchHealthLogs();
-  }, [selectedPetId, userData]);
+  }, [selectedPetId, userData, demoMode]);
 
   const handlePetChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
@@ -470,6 +482,24 @@ const HealthJournal = () => {
     setEmailSetupOpen(false);
   };
 
+  const handleLayer2EmailSubmit = async (email: string) => {
+    if (!userData) {
+      return;
+    }
+
+    await updateUserEmail(userData.token!, email, userData.isAnonymous || false);
+
+    // Update user in localStorage
+    const updatedUser = { ...userData, email };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUserData(updatedUser);
+  };
+
+  const handleLayer2Dismiss = () => {
+    sessionStorage.setItem('emailBannerLayer2Shown', 'true');
+    setShowLayer2Banner(false);
+  };
+
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto' }}>
       {/* Demo Mode Banner */}
@@ -637,6 +667,15 @@ const HealthJournal = () => {
             </Select>
           </FormControl>
         </Paper>
+      )}
+
+      {/* Layer 2: Check-In Banner */}
+      {showLayer2Banner && selectedPet && (
+        <TrialCheckInBanner
+          petName={selectedPet.name}
+          onEmailSubmit={handleLayer2EmailSubmit}
+          onDismiss={handleLayer2Dismiss}
+        />
       )}
 
       {/* Journal Section */}

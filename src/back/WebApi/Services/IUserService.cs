@@ -18,5 +18,6 @@ namespace EverPal.WebApi.Services
         Task<bool> ConvertAnonymousToEmailAsync(Guid userId, string firebaseUid, string email);
         Task UpdateEmailVerificationSentAsync(Guid userId);
         Task MarkEmailVerifiedAsync(Guid userId);
+        Task<bool> UpdateEmailAsync(string userId, string email);
     }
 }
