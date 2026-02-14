@@ -16,10 +16,13 @@ import DisclaimerModal from './components/DisclaimerModal';
 import PaywallScreen from './components/PaywallScreen';
 import TrialBanner from './components/TrialBanner';
 import EmailVerificationBanner from './components/EmailVerificationBanner';
+import { LanguageProvider } from './i18n/LanguageContext';
+import { useLanguage } from './i18n/LanguageContext';
 
 function AppContent() {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const { trialStatus, loading } = useAuth();
+  const { t } = useLanguage();
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   useEffect(() => {
@@ -125,7 +128,7 @@ function AppContent() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-          Loading...
+          {t('common_loading')}
         </Box>
       </ThemeProvider>
     );
@@ -205,11 +208,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ColdStartProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </ColdStartProvider>
+    <LanguageProvider>
+      <ColdStartProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ColdStartProvider>
+    </LanguageProvider>
   );
 }
 

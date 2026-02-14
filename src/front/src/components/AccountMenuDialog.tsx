@@ -11,7 +11,8 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import { Close, Security, Email, Logout, ContactSupport, CheckCircle } from '@mui/icons-material';
+import { Close, Security, Email, Logout, ContactSupport, CheckCircle, Language as LanguageIcon } from '@mui/icons-material';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface AccountMenuDialogProps {
   open: boolean;
@@ -32,6 +33,8 @@ const AccountMenuDialog = ({
   onSecureAccount,
   onSignOut,
 }: AccountMenuDialogProps) => {
+  const { t, language, setLanguage } = useLanguage();
+
   const handleSecureAccount = () => {
     onClose();
     onSecureAccount();
@@ -51,7 +54,7 @@ const AccountMenuDialog = ({
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6" component="span" sx={{ fontWeight: 600 }}>
-            Account
+            {t('account_title')}
           </Typography>
           <IconButton onClick={onClose} size="small">
             <Close />
@@ -67,8 +70,8 @@ const AccountMenuDialog = ({
                 <Security color="primary" />
               </ListItemIcon>
               <ListItemText
-                primary="Secure Your Account"
-                secondary="Set up email login to protect your data"
+                primary={t('secure_account')}
+                secondary={t('secure_account_desc')}
                 primaryTypographyProps={{ fontWeight: 600 }}
               />
             </ListItemButton>
@@ -85,12 +88,12 @@ const AccountMenuDialog = ({
                       <>
                         <CheckCircle sx={{ fontSize: 14 }} color="success" />
                         <Typography variant="caption" color="success.main">
-                          Verified
+                          {t('verified')}
                         </Typography>
                       </>
                     ) : (
                       <Typography variant="caption" color="warning.main">
-                        Not verified
+                        {t('not_verified')}
                       </Typography>
                     )}
                   </Box>
@@ -104,15 +107,25 @@ const AccountMenuDialog = ({
               <ListItemIcon>
                 <Logout />
               </ListItemIcon>
-              <ListItemText primary="Sign Out" />
+              <ListItemText primary={t('sign_out')} />
             </ListItemButton>
           )}
+
+          <ListItemButton
+            onClick={() => setLanguage(language === 'en' ? 'pl' : 'en')}
+            sx={{ borderRadius: 2, mb: 1 }}
+          >
+            <ListItemIcon>
+              <LanguageIcon />
+            </ListItemIcon>
+            <ListItemText primary={t('language_label')} />
+          </ListItemButton>
 
           <ListItemButton onClick={handleContactSupport} sx={{ borderRadius: 2 }}>
             <ListItemIcon>
               <ContactSupport />
             </ListItemIcon>
-            <ListItemText primary="Contact Support" secondary="support@everpal.app" />
+            <ListItemText primary={t('contact_support')} secondary="support@everpal.app" />
           </ListItemButton>
         </List>
       </DialogContent>

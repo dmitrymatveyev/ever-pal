@@ -18,7 +18,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/pl';
 import { updateHealthLog, type UpdateHealthLogRequest, type HealthLog, type Tag } from '../services/healthLogService';
+import { useLanguage } from '../i18n/LanguageContext';
 import QuickLogTags from './QuickLogTags';
 import PhotoUpload from './PhotoUpload';
 import { getTagsByLogType } from '../services/tagService';
@@ -34,6 +36,7 @@ interface EditHealthLogDialogProps {
 const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHealthLogDialogProps) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const { t, language } = useLanguage();
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [notes, setNotes] = useState('');
@@ -87,7 +90,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
     }
 
     if (selectedTags.length === 0 && !notes.trim() && !photoBase64) {
-      setError('Please select at least one tag, add notes, or attach a photo');
+      setError(t('error_select_tag_or_note'));
       return;
     }
 
@@ -125,9 +128,9 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
       console.error('Failed to update health log:', err);
 
       if (err instanceof OfflineError) {
-        setError('You are currently offline. Please check your connection and try again.');
+        setError(t('error_offline'));
       } else {
-        setError('Failed to update health log. Please try again.');
+        setError(t('error_update_log'));
       }
     } finally {
       setSaving(false);
@@ -162,12 +165,12 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
               {getLogTypeIcon(healthLog.logType)}
             </Typography>
             <Typography variant="h5" component="span" sx={{ fontWeight: 600 }}>
-              Edit {healthLog.logType.charAt(0).toUpperCase() + healthLog.logType.slice(1)} Log
+              {t('edit_log_title', { logType: t(`log_type_${healthLog.logType}` as any) })}
             </Typography>
           </Box>
         )}
         <Typography variant="body2" color="text.secondary">
-          Update tags, notes, photo, or timing
+          {t('edit_subtitle')}
         </Typography>
       </DialogTitle>
       <DialogContent>
@@ -190,7 +193,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
                 letterSpacing: '0.05em',
               }}
             >
-              Select tags
+              {t('select_tags')}
             </Typography>
             {loadingTags ? (
               <CircularProgress size={24} />
@@ -216,7 +219,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
                 letterSpacing: '0.05em',
               }}
             >
-              Notes (Optional)
+              {t('notes_optional')}
             </Typography>
             <TextField
               value={notes}
@@ -225,7 +228,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
               multiline
               rows={3}
               disabled={saving}
-              placeholder="Add any additional notes..."
+              placeholder={t('notes_placeholder')}
             />
           </Box>
 
@@ -242,7 +245,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
                 letterSpacing: '0.05em',
               }}
             >
-              Photo (Optional)
+              {t('photo_optional')}
             </Typography>
             <PhotoUpload
               onPhotoChange={handlePhotoChange}
@@ -263,19 +266,19 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
                 letterSpacing: '0.05em',
               }}
             >
-              When did this occur?
+              {t('when_occurred')}
             </Typography>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language}>
               <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <DatePicker
-                  label="Date"
+                  label={t('date_label')}
                   value={selectedDate}
                   onChange={(newValue) => setSelectedDate(newValue)}
                   disabled={saving}
                   slotProps={{ textField: { sx: { flex: 1, minWidth: 200 } } }}
                 />
                 <TimePicker
-                  label="Time"
+                  label={t('time_label')}
                   value={selectedTime}
                   onChange={(newValue) => setSelectedTime(newValue)}
                   disabled={saving}
@@ -288,7 +291,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={handleClose} disabled={saving}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
@@ -296,7 +299,7 @@ const EditHealthLogDialog = ({ open, onClose, healthLog, onLogUpdated }: EditHea
           disabled={saving}
           size="large"
         >
-          {saving ? <CircularProgress size={24} /> : 'Save Changes'}
+          {saving ? <CircularProgress size={24} /> : t('save_changes')}
         </Button>
       </DialogActions>
     </Dialog>

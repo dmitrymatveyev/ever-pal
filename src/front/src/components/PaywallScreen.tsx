@@ -12,12 +12,15 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { STRIPE_PAYMENT_LINK, LIFETIME_PRICE, FOUNDING_MEMBER_LIMIT, YEARLY_PRICE } from '../config/stripe';
+import { useLanguage } from '../i18n/LanguageContext';
 
 /**
  * Paywall screen shown when trial expires and user hasn't paid
  * Full-screen takeover to encourage upgrade
  */
 const PaywallScreen = () => {
+  const { t } = useLanguage();
+
   const handleUpgrade = () => {
     // Get current user ID from localStorage
     const userStr = localStorage.getItem('user');
@@ -62,10 +65,10 @@ const PaywallScreen = () => {
         }}
       >
         <Typography variant="h4" gutterBottom align="center">
-          Keep Tracking Your Pet's Health
+          {t('paywall_title')}
         </Typography>
         <Typography variant="body1" color="text.secondary" paragraph align="center">
-          Your 7-day trial has ended. Keep all your pet's health data with lifetime access.
+          {t('paywall_subtitle')}
         </Typography>
 
         <Card sx={{ mt: 3, width: '100%', maxWidth: 400 }}>
@@ -75,16 +78,16 @@ const PaywallScreen = () => {
                 ${LIFETIME_PRICE}
               </Typography>
               <Typography variant="subtitle1" color="text.secondary">
-                One-time payment - Lifetime access
+                {t('paywall_price_label')}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                Just $6.58/month equivalent
+                {t('paywall_monthly_equiv')}
               </Typography>
               <Typography variant="caption" color="warning.main" display="block" sx={{ mt: 1 }}>
-                Limited to first {FOUNDING_MEMBER_LIMIT} customers
+                {t('paywall_limited', { limit: FOUNDING_MEMBER_LIMIT })}
               </Typography>
               <Typography variant="caption" color="success.main" display="block" sx={{ mt: 0.5 }}>
-                Less than one vet visit
+                {t('paywall_less_than_vet')}
               </Typography>
             </Box>
 
@@ -93,31 +96,31 @@ const PaywallScreen = () => {
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Export unlimited vet-ready PDF reports" />
+                <ListItemText primary={t('paywall_feature_pdf')} />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Unlimited health logs with photos" />
+                <ListItemText primary={t('paywall_feature_logs')} />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Track multiple pets" />
+                <ListItemText primary={t('paywall_feature_pets')} />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="All future features included" />
+                <ListItemText primary={t('paywall_feature_future')} />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
                   <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary="Priority support" />
+                <ListItemText primary={t('paywall_feature_support')} />
               </ListItem>
             </List>
 
@@ -129,21 +132,21 @@ const PaywallScreen = () => {
               onClick={handleUpgrade}
               sx={{ mt: 2 }}
             >
-              Upgrade to Lifetime Access
+              {t('paywall_cta')}
             </Button>
 
             <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 2, textAlign: 'center', fontWeight: 500 }}>
-              30-day money-back guarantee - no questions asked
+              {t('paywall_guarantee')}
             </Typography>
 
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, textAlign: 'center' }}>
-              After {FOUNDING_MEMBER_LIMIT} customers: ${YEARLY_PRICE}/year
+              {t('paywall_after_limit', { limit: FOUNDING_MEMBER_LIMIT, yearlyPrice: YEARLY_PRICE })}
             </Typography>
           </CardContent>
         </Card>
 
         <Typography variant="body2" color="text.secondary" sx={{ mt: 3, textAlign: 'center' }}>
-          Questions? Contact support@everpal.app
+          {t('paywall_contact')}
         </Typography>
       </Box>
     </Container>

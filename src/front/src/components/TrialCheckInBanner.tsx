@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { Lightbulb, Close } from '@mui/icons-material';
 import { trackEvent } from '../utils/analytics';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface TrialCheckInBannerProps {
   petName: string;
@@ -18,6 +19,7 @@ interface TrialCheckInBannerProps {
 }
 
 const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInBannerProps) => {
+  const { t } = useLanguage();
   const [showInput, setShowInput] = useState(false);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -41,13 +43,13 @@ const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInB
 
   const handleSubmit = async () => {
     if (!email.trim()) {
-      setError('Please enter an email address');
+      setError(t('error_email_required'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+      setError(t('error_email_invalid'));
       return;
     }
 
@@ -65,7 +67,7 @@ const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInB
       onDismiss();
     } catch (err) {
       console.error('Failed to save email:', err);
-      setError('Failed to save email. Please try again.');
+      setError(t('error_save_email_failed'));
       trackEvent('trial_email_layer2_error', {
         error: err instanceof Error ? err.message : 'unknown_error'
       });
@@ -101,7 +103,7 @@ const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInB
             startIcon={<Close />}
             sx={{ minWidth: 'auto' }}
           >
-            Not right now
+            {t('not_right_now')}
           </Button>
         )
       }
@@ -109,10 +111,10 @@ const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInB
       {!showInput ? (
         <Box>
           <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-            Have questions about tracking {petName}?
+            {t('layer2_title', { petName })}
           </Typography>
           <Typography variant="body2" sx={{ mb: 1.5, color: 'text.secondary' }}>
-            We can send helpful tips during your trial.
+            {t('layer2_subtitle')}
           </Typography>
           <Button
             variant="outlined"
@@ -120,13 +122,13 @@ const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInB
             onClick={handleAddEmail}
             sx={{ fontWeight: 600 }}
           >
-            + Add Email
+            {t('layer2_add_email')}
           </Button>
         </Box>
       ) : (
         <Box sx={{ width: '100%' }}>
           <Typography variant="body2" sx={{ fontWeight: 500, mb: 2 }}>
-            Enter your email to receive helpful tips
+            {t('layer2_email_prompt')}
           </Typography>
 
           <Collapse in={error !== null}>
@@ -153,7 +155,7 @@ const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInB
               disabled={submitting}
               sx={{ minWidth: 80 }}
             >
-              {submitting ? <CircularProgress size={20} /> : 'Add'}
+              {submitting ? <CircularProgress size={20} /> : t('add_button')}
             </Button>
             <Button
               variant="text"
@@ -161,7 +163,7 @@ const TrialCheckInBanner = ({ petName, onEmailSubmit, onDismiss }: TrialCheckInB
               onClick={handleNotNow}
               disabled={submitting}
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </Box>
         </Box>

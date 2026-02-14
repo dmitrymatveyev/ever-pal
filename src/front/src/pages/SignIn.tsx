@@ -19,9 +19,11 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { login, forgotPassword, resendVerification } from '../services/emailAuthService';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const { t, language, setLanguage } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +51,7 @@ const SignIn = () => {
     setSessionExpiryMessage(null);
 
     if (!email || !password) {
-      setError('Please enter both email and password');
+      setError(t('error_email_password_required'));
       return;
     }
 
@@ -76,14 +78,14 @@ const SignIn = () => {
       console.error('Sign-in failed:', err);
       if (err instanceof Error) {
         if (err.message.includes('401')) {
-          setError('Incorrect email or password');
+          setError(t('error_incorrect_credentials'));
         } else if (err.message.includes('404')) {
-          setError('No account found with this email');
+          setError(t('error_no_account'));
         } else {
-          setError('Failed to sign in. Please try again.');
+          setError(t('error_sign_in_failed'));
         }
       } else {
-        setError('Failed to sign in. Please try again.');
+        setError(t('error_sign_in_failed'));
       }
     } finally {
       setLoading(false);
@@ -135,10 +137,10 @@ const SignIn = () => {
       await resendVerification(unverifiedEmail);
       setError(null);
       setUnverifiedEmail(null);
-      setSessionExpiryMessage(`Verification email sent to ${unverifiedEmail}`);
+      setSessionExpiryMessage(t('verification_sent', { email: unverifiedEmail }));
     } catch (err) {
       console.error('Resend verification failed:', err);
-      setSessionExpiryMessage(`Verification email sent to ${unverifiedEmail}`);
+      setSessionExpiryMessage(t('verification_sent', { email: unverifiedEmail }));
     } finally {
       setResendingVerification(false);
     }
@@ -152,11 +154,11 @@ const SignIn = () => {
     <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, textAlign: 'center' }}>
-          Sign In
+          {t('sign_in')}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-          Welcome back to EverPal
+          {t('welcome_back')}
         </Typography>
 
         {sessionExpiryMessage && (
@@ -182,17 +184,17 @@ const SignIn = () => {
                 onClick={handleResendVerification}
                 disabled={resendingVerification}
               >
-                {resendingVerification ? 'Sending...' : 'Resend'}
+                {resendingVerification ? t('resending') : t('resend')}
               </Button>
             }
           >
-            Please verify your email before signing in
+            {t('verify_email_before_signin')}
           </Alert>
         )}
 
         <TextField
           fullWidth
-          label="Email"
+          label={t('email_label')}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -203,7 +205,7 @@ const SignIn = () => {
 
         <TextField
           fullWidth
-          label="Password"
+          label={t('password_label')}
           type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -238,7 +240,7 @@ const SignIn = () => {
             disabled={loading}
             sx={{ textDecoration: 'none' }}
           >
-            Forgot Password?
+            {t('forgot_password')}
           </Link>
         </Box>
 
@@ -251,12 +253,12 @@ const SignIn = () => {
           endIcon={loading && <CircularProgress size={16} />}
           sx={{ mb: 2 }}
         >
-          Sign In
+          {t('sign_in')}
         </Button>
 
         <Divider sx={{ my: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            or
+            {t('or_divider')}
           </Typography>
         </Divider>
 
@@ -269,16 +271,16 @@ const SignIn = () => {
             disabled={loading}
             sx={{ mb: 1 }}
           >
-            Start fresh without an account
+            {t('start_fresh')}
           </Button>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', px: 2 }}>
-            This creates a new account. To access existing data, sign in above.
+            {t('start_fresh_note')}
           </Typography>
         </Box>
 
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
-            Don't have an account?{' '}
+            {t('no_account_question')}{' '}
           </Typography>
           <Link
             component="button"
@@ -287,26 +289,37 @@ const SignIn = () => {
             disabled={loading}
             sx={{ textDecoration: 'none', fontWeight: 600 }}
           >
-            Start Free Trial
+            {t('start_free_trial')}
+          </Link>
+        </Box>
+
+        <Box sx={{ textAlign: 'center', mt: 3 }}>
+          <Link
+            component="button"
+            variant="body2"
+            onClick={() => setLanguage(language === 'en' ? 'pl' : 'en')}
+            sx={{ textDecoration: 'none', color: 'text.secondary' }}
+          >
+            {language === 'en' ? 'Polski' : 'English'}
           </Link>
         </Box>
       </Paper>
 
       <Dialog open={forgotPasswordOpen} onClose={handleForgotPasswordClose} maxWidth="xs" fullWidth>
-        <DialogTitle>Reset Password</DialogTitle>
+        <DialogTitle>{t('reset_password')}</DialogTitle>
         <DialogContent>
           {forgotPasswordSuccess ? (
             <Alert severity="success" sx={{ mt: 1 }}>
-              Password reset email sent to {forgotPasswordEmail}
+              {t('reset_password_sent', { email: forgotPasswordEmail })}
             </Alert>
           ) : (
             <>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2, mt: 1 }}>
-                Enter your email address and we'll send you a link to reset your password.
+                {t('reset_password_instructions')}
               </Typography>
               <TextField
                 fullWidth
-                label="Email"
+                label={t('email_label')}
                 type="email"
                 value={forgotPasswordEmail}
                 onChange={(e) => setForgotPasswordEmail(e.target.value)}
@@ -323,16 +336,16 @@ const SignIn = () => {
         </DialogContent>
         <DialogActions>
           {forgotPasswordSuccess ? (
-            <Button onClick={handleForgotPasswordClose}>Close</Button>
+            <Button onClick={handleForgotPasswordClose}>{t('close')}</Button>
           ) : (
             <>
-              <Button onClick={handleForgotPasswordClose} disabled={forgotPasswordLoading}>Cancel</Button>
+              <Button onClick={handleForgotPasswordClose} disabled={forgotPasswordLoading}>{t('cancel')}</Button>
               <Button
                 onClick={handleForgotPasswordSubmit}
                 disabled={forgotPasswordLoading || !forgotPasswordEmail}
                 endIcon={forgotPasswordLoading && <CircularProgress size={16} />}
               >
-                Send Reset Link
+                {t('send_reset_link')}
               </Button>
             </>
           )}

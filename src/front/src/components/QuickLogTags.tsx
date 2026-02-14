@@ -1,14 +1,6 @@
 import { Box, Chip, Typography } from '@mui/material';
 import type { Tag } from '../services/healthLogService';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  energy: 'Energy Level',
-  appetite: 'Appetite',
-  mobility: 'Mobility',
-  mood: 'Mood & Behavior',
-  sleep: 'Sleep',
-  behavior: 'Other Observations',
-};
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface QuickLogTagsProps {
   availableTags: Tag[];
@@ -18,6 +10,17 @@ interface QuickLogTagsProps {
 }
 
 const QuickLogTags = ({ availableTags, selectedTags, onTagToggle, maxTags }: QuickLogTagsProps) => {
+  const { t, translateTag } = useLanguage();
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    energy: t('category_energy'),
+    appetite: t('category_appetite'),
+    mobility: t('category_mobility'),
+    mood: t('category_mood'),
+    sleep: t('category_sleep'),
+    behavior: t('category_behavior'),
+  };
+
   // Group tags by category
   const tagsByCategory = availableTags.reduce((acc, tag) => {
     const category = tag.category || 'other';
@@ -63,7 +66,7 @@ const QuickLogTags = ({ availableTags, selectedTags, onTagToggle, maxTags }: Qui
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <span style={{ fontSize: '1.1rem' }}>{tag.icon}</span>
-                      <span style={{ fontSize: '0.875rem' }}>{tag.label}</span>
+                      <span style={{ fontSize: '0.875rem' }}>{translateTag(tag.label)}</span>
                     </Box>
                   }
                   onClick={() => handleTagClick(tag)}

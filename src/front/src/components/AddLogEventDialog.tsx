@@ -20,7 +20,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/pl';
 import { createHealthLog, type CreateHealthLogRequest, type Tag } from '../services/healthLogService';
+import { useLanguage } from '../i18n/LanguageContext';
 import QuickLogTags from './QuickLogTags';
 import PhotoUpload from './PhotoUpload';
 import { getPets } from '../services/petService';
@@ -45,18 +47,19 @@ interface LogTypeOption {
   icon: string;
 }
 
-const LOG_TYPES: LogTypeOption[] = [
-  { value: 'food', label: 'Food', icon: '🍽️' },
-  { value: 'stool', label: 'Stool', icon: '💩' },
-  { value: 'medication', label: 'Medication', icon: '💊' },
-  { value: 'vomit', label: 'Vomit', icon: '🤮' },
-  { value: 'urine', label: 'Urine', icon: '💧' },
-  { value: 'general', label: 'General', icon: '🐾' },
-];
-
 const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: AddLogEventDialogProps) => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+  const { t, language } = useLanguage();
+
+  const LOG_TYPES: LogTypeOption[] = [
+    { value: 'food', label: t('log_type_food'), icon: '🍽️' },
+    { value: 'stool', label: t('log_type_stool'), icon: '💩' },
+    { value: 'medication', label: t('log_type_medication'), icon: '💊' },
+    { value: 'vomit', label: t('log_type_vomit'), icon: '🤮' },
+    { value: 'urine', label: t('log_type_urine'), icon: '💧' },
+    { value: 'general', label: t('log_type_general'), icon: '🐾' },
+  ];
 
   const [selectedLogType, setSelectedLogType] = useState<string | null>(null);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
@@ -156,12 +159,12 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
 
   const handleSubmit = async () => {
     if (!selectedLogType) {
-      setError('Please select a log type');
+      setError(t('error_select_log_type'));
       return;
     }
 
     if (selectedTags.length === 0 && !notes.trim() && !photoBase64) {
-      setError('Please select at least one tag, add notes, or attach a photo');
+      setError(t('error_select_tag_or_note'));
       return;
     }
 
@@ -208,9 +211,9 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
       console.error('Failed to create health log:', err);
 
       if (err instanceof OfflineError) {
-        setError('You are currently offline. Please check your connection and try again.');
+        setError(t('error_offline'));
       } else {
-        setError('Failed to create health log. Please try again.');
+        setError(t('error_create_log'));
       }
     } finally {
       setSaving(false);
@@ -234,10 +237,10 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
     <>
       <DialogTitle>
         <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-          Log health event for {petName || 'your pet'}
+          {t('log_event_title', { petName: petName || t('common_loading') })}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          What type of event are you logging?
+          {t('log_event_subtitle')}
         </Typography>
       </DialogTitle>
       <DialogContent>
@@ -272,7 +275,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
         </Grid>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleClose}>{t('cancel')}</Button>
       </DialogActions>
     </>
   );
@@ -288,11 +291,11 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
               {logTypeInfo?.icon}
             </Typography>
             <Typography variant="h5" component="span" sx={{ fontWeight: 600 }}>
-              {logTypeInfo?.label} Log
+              {t('log_detail_title', { logType: logTypeInfo?.label || '' })}
             </Typography>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {petName || 'Your pet'}
+            {petName || ''}
           </Typography>
         </DialogTitle>
         <DialogContent>
@@ -315,7 +318,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
                   letterSpacing: '0.05em',
                 }}
               >
-                Select tags
+                {t('select_tags')}
               </Typography>
               {loadingTags ? (
                 <CircularProgress size={24} />
@@ -341,7 +344,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
                   letterSpacing: '0.05em',
                 }}
               >
-                Notes (Optional)
+                {t('notes_optional')}
               </Typography>
               <TextField
                 value={notes}
@@ -350,7 +353,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
                 multiline
                 rows={3}
                 disabled={saving}
-                placeholder="Add any additional notes..."
+                placeholder={t('notes_placeholder')}
               />
             </Box>
 
@@ -367,7 +370,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
                   letterSpacing: '0.05em',
                 }}
               >
-                Photo (Optional)
+                {t('photo_optional')}
               </Typography>
               <PhotoUpload onPhotoChange={handlePhotoChange} />
             </Box>
@@ -385,19 +388,19 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
                   letterSpacing: '0.05em',
                 }}
               >
-                When did this occur?
+                {t('when_occurred')}
               </Typography>
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale={language}>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <DatePicker
-                    label="Date"
+                    label={t('date_label')}
                     value={selectedDate}
                     onChange={(newValue) => setSelectedDate(newValue)}
                     disabled={saving}
                     slotProps={{ textField: { sx: { flex: 1, minWidth: 200 } } }}
                   />
                   <TimePicker
-                    label="Time"
+                    label={t('time_label')}
                     value={selectedTime}
                     onChange={(newValue) => setSelectedTime(newValue)}
                     disabled={saving}
@@ -410,7 +413,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={handleBack} disabled={saving}>
-            Back
+            {t('back')}
           </Button>
           <Button
             onClick={handleSubmit}
@@ -418,7 +421,7 @@ const AddLogEventDialog = ({ open, onClose, petId, onLogAdded, initialData }: Ad
             disabled={saving}
             size="large"
           >
-            {saving ? <CircularProgress size={24} /> : 'Save'}
+            {saving ? <CircularProgress size={24} /> : t('save')}
           </Button>
         </DialogActions>
       </>

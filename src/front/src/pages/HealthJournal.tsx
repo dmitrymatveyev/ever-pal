@@ -36,6 +36,7 @@ import { isDemoMode, getDemoPet, getDemoHealthLogs, disableDemoMode } from '../u
 import { trackEvent } from '../utils/analytics';
 import { useAuth } from '../contexts/AuthContext';
 import { updateUserEmail } from '../services/userService';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface UserData {
   email: string;
@@ -47,6 +48,7 @@ const HealthJournal = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { markEngaged, user, logout, convertToEmail } = useAuth();
+  const { t, translateTag, language } = useLanguage();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>('');
@@ -94,7 +96,7 @@ const HealthJournal = () => {
 
         const userStr = localStorage.getItem('user');
         if (!userStr) {
-          setError('No user data found');
+          setError(t('error_no_user'));
           setLoading(false);
           return;
         }
@@ -122,7 +124,7 @@ const HealthJournal = () => {
         }
       } catch (err) {
         console.error('Failed to fetch data:', err);
-        setError('Failed to load data');
+        setError(t('error_load_data'));
       } finally {
         setLoading(false);
       }
@@ -163,7 +165,7 @@ const HealthJournal = () => {
         }
       } catch (err) {
         console.error('Failed to fetch health logs:', err);
-        setError('Failed to load health logs');
+        setError(t('error_load_logs'));
       } finally {
         setLoadingLogs(false);
       }
@@ -274,7 +276,7 @@ const HealthJournal = () => {
       // Keep current visible count after deletion
     } catch (err) {
       console.error('Failed to delete health log:', err);
-      setError('Failed to delete health log. Please try again.');
+      setError(t('error_delete_log'));
     }
   };
 
@@ -313,12 +315,12 @@ const HealthJournal = () => {
     const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
 
     if (dateOnly.getTime() === todayOnly.getTime()) {
-      return 'Today';
+      return t('today');
     }
     if (dateOnly.getTime() === yesterdayOnly.getTime()) {
-      return 'Yesterday';
+      return t('yesterday');
     }
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    return date.toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-US', { month: 'long', day: 'numeric' });
   };
 
   const groupLogsByDate = (logs: HealthLog[]) => {
@@ -524,15 +526,15 @@ const HealthJournal = () => {
                 fontWeight: 600
               }}
             >
-              Add Your Pet
+              {t('demo_banner_cta')}
             </Button>
           }
         >
           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            You're viewing a demo with sample data
+            {t('demo_banner_title')}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', mt: 0.5 }}>
-            Explore how EverPal works, then add your pet to start tracking for real
+            {t('demo_banner_subtitle')}
           </Typography>
         </Alert>
       )}
@@ -624,7 +626,7 @@ const HealthJournal = () => {
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: { xs: '0.8rem', sm: '0.875rem' }, textAlign: 'center', px: 1 }}>
                 {selectedPet.breed}
                 {selectedPet.breed && selectedPet.age && ' • '}
-                {selectedPet.age && `${selectedPet.age} years old`}
+                {selectedPet.age && t('years_old', { age: selectedPet.age })}
               </Typography>
             )}
           </Box>
@@ -661,7 +663,7 @@ const HealthJournal = () => {
               <MenuItem value="add-new">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Add fontSize="small" />
-                  <span>Add another pet</span>
+                  <span>{t('add_another_pet')}</span>
                 </Box>
               </MenuItem>
             </Select>
@@ -685,10 +687,10 @@ const HealthJournal = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 3, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-                Journal
+                {t('journal_title')}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                Track {selectedPet?.name}'s health
+                {t('track_pet_health', { petName: selectedPet?.name || '' })}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
@@ -714,7 +716,7 @@ const HealthJournal = () => {
                   },
                 }}
               >
-                Add Entry
+                {t('add_entry')}
               </Button>
             </Box>
           </Box>
@@ -724,16 +726,16 @@ const HealthJournal = () => {
           <Paper sx={{ p: { xs: 3, sm: 4, md: 6 } }}>
             <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
               <CircularProgress />
-              <Typography color="text.secondary">Loading journal entries...</Typography>
+              <Typography color="text.secondary">{t('loading_journal')}</Typography>
             </Box>
           </Paper>
         ) : healthLogs.length === 0 ? (
           <Paper sx={{ p: { xs: 3, sm: 4, md: 6 }, textAlign: 'center' }}>
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
-              Start {selectedPet?.name}'s health journal
+              {t('start_journal', { petName: selectedPet?.name || '' })}
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-              Log symptoms, meals, and medications. Spot patterns and export reports for your vet.
+              {t('start_journal_subtitle')}
             </Typography>
             <Button
               variant="contained"
@@ -742,7 +744,7 @@ const HealthJournal = () => {
               onClick={openAddLogDialog}
               sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
-              Add First Entry
+              {t('add_first_entry')}
             </Button>
           </Paper>
         ) : (
@@ -795,7 +797,7 @@ const HealthJournal = () => {
                                         {log.logType === 'general' && '🐾'}
                                       </span>
                                       <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                                        {log.logType.charAt(0).toUpperCase() + log.logType.slice(1)}
+                                        {t(`log_type_${log.logType}` as any)}
                                       </span>
                                     </Box>
                                   }
@@ -822,7 +824,7 @@ const HealthJournal = () => {
                                     label={
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                         <span style={{ fontSize: '1rem' }}>{tag.icon}</span>
-                                        <span style={{ fontSize: '0.8125rem' }}>{tag.label}</span>
+                                        <span style={{ fontSize: '0.8125rem' }}>{translateTag(tag.label)}</span>
                                       </Box>
                                     }
                                     size="small"
@@ -875,7 +877,7 @@ const HealthJournal = () => {
                                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                     <CameraAlt fontSize="small" color="action" />
                                     <Typography variant="body2" color="text.secondary">
-                                      View photo
+                                      {t('view_photo')}
                                     </Typography>
                                   </Box>
                                 </Box>
@@ -889,7 +891,7 @@ const HealthJournal = () => {
                             )}
                             {/* Display time */}
                             <Typography variant="caption" color="text.secondary">
-                              {new Date(log.loggedAt).toLocaleTimeString('en-US', {
+                              {new Date(log.loggedAt).toLocaleTimeString(language === 'pl' ? 'pl-PL' : 'en-US', {
                                 hour: '2-digit',
                                 minute: '2-digit'
                               })}
@@ -929,7 +931,7 @@ const HealthJournal = () => {
                   onClick={handleShowMore}
                   size="large"
                 >
-                  Show More Entries
+                  {t('show_more')}
                 </Button>
               </Box>
             )}
@@ -974,7 +976,7 @@ const HealthJournal = () => {
         open={demoModeSnackbar}
         autoHideDuration={4000}
         onClose={() => setDemoModeSnackbar(false)}
-        message="This is a demo. Click 'Add Your Pet' above to start tracking for real"
+        message={t('demo_snackbar')}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
 
@@ -1022,11 +1024,11 @@ const HealthJournal = () => {
       >
         <MenuItem onClick={handleMenuCopy}>
           <ContentCopy fontSize="small" sx={{ mr: 1 }} />
-          Copy Entry
+          {t('copy_entry')}
         </MenuItem>
         <MenuItem onClick={handleMenuDelete} sx={{ color: 'error.main' }}>
           <Delete fontSize="small" sx={{ mr: 1 }} />
-          Delete
+          {t('delete')}
         </MenuItem>
       </Menu>
     </Box>

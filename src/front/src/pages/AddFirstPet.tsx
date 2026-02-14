@@ -16,10 +16,12 @@ import { trackEvent, trackPageView, trackFormInteraction, trackFormSubmit } from
 import { enableDemoMode } from '../utils/demoData';
 import { useAuth } from '../contexts/AuthContext';
 import TrialStartEmailModal from '../components/TrialStartEmailModal';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const AddFirstPet = () => {
   const navigate = useNavigate();
   const { user, createAnonymousUser, markEngaged, refetchTrialStatus } = useAuth();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<CreatePetRequest>({
     name: '',
     breed: '',
@@ -68,7 +70,7 @@ const AddFirstPet = () => {
     });
 
     if (!formData.name.trim()) {
-      setError('Pet name is required');
+      setError(t('error_pet_name_required'));
       trackFormSubmit('add_first_pet', false, 'validation_failed_no_name');
       return;
     }
@@ -113,7 +115,7 @@ const AddFirstPet = () => {
       }
     } catch (err) {
       console.error('Failed to create pet:', err);
-      setError('Failed to create pet. Please try again.');
+      setError(t('error_create_pet_failed'));
       trackFormSubmit('add_first_pet', false, 'api_error');
       trackEvent('pet_creation_failed', {
         error: err instanceof Error ? err.message : 'unknown_error'
@@ -157,19 +159,19 @@ const AddFirstPet = () => {
     <Box sx={{ maxWidth: 600, mx: 'auto' }}>
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
-          Welcome to EverPal 🐾
+          {t('welcome_title')} 🐾
         </Typography>
         <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400 }}>
-          Track symptoms. Share with your vet.
+          {t('welcome_subtitle')}
         </Typography>
         <Typography variant="body1" sx={{ mt: 2, color: 'text.secondary' }}>
-          Let's start by adding your companion to the journal.
+          {t('welcome_body')}
         </Typography>
       </Box>
 
       <Paper sx={{ p: 4, boxShadow: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-          Tell us about your pet
+          {t('tell_us_about_pet')}
         </Typography>
 
         {error && (
@@ -180,7 +182,7 @@ const AddFirstPet = () => {
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
-            label="Pet Name"
+            label={t('pet_name_label')}
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
             onFocus={() => trackFormInteraction('add_first_pet', 'name', 'focused')}
@@ -190,8 +192,8 @@ const AddFirstPet = () => {
             autoFocus
           />
           <TextField
-            label="Age (Optional)"
-            placeholder="in years"
+            label={t('age_optional_label')}
+            placeholder={t('age_placeholder')}
             type="number"
             value={formData.age || ''}
             onChange={(e) => handleChange('age', e.target.value)}
@@ -208,7 +210,7 @@ const AddFirstPet = () => {
             disabled={saving}
             sx={{ mt: 2 }}
           >
-            {saving ? <CircularProgress size={24} /> : 'Add Pet & Continue'}
+            {saving ? <CircularProgress size={24} /> : t('add_pet_continue')}
           </Button>
 
           <Button
@@ -218,7 +220,7 @@ const AddFirstPet = () => {
             disabled={saving}
             sx={{ mt: 1 }}
           >
-            Skip for now - Browse demo
+            {t('skip_browse_demo')}
           </Button>
 
           <Typography
@@ -230,12 +232,12 @@ const AddFirstPet = () => {
               fontSize: '0.875rem'
             }}
           >
-            Just name to get started • Add breed, weight, photo in pet profile
+            {t('just_name_hint')}
           </Typography>
 
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
-              Already have an account?{' '}
+              {t('already_have_account')}{' '}
             </Typography>
             <Link
               component="button"
@@ -243,7 +245,7 @@ const AddFirstPet = () => {
               onClick={() => navigate('/signin')}
               sx={{ textDecoration: 'none', fontWeight: 600 }}
             >
-              Sign in
+              {t('sign_in_link')}
             </Link>
           </Box>
         </Box>

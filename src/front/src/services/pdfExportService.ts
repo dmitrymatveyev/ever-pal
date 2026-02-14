@@ -5,6 +5,7 @@ export interface ExportPdfRequest {
   startDate?: string;
   endDate?: string;
   includePhotos?: boolean;
+  language?: string;
 }
 
 export const exportHealthLogsPdf = async (

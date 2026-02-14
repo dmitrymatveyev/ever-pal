@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { Favorite } from '@mui/icons-material';
 import { trackEvent } from '../utils/analytics';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface TrialStartEmailModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface TrialStartEmailModalProps {
 }
 
 const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialStartEmailModalProps) => {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,13 +36,13 @@ const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialSt
 
   const handleSubmit = async () => {
     if (!email.trim()) {
-      setError('Please enter an email address');
+      setError(t('error_email_required'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+      setError(t('error_email_invalid'));
       return;
     }
 
@@ -58,7 +60,7 @@ const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialSt
       onClose();
     } catch (err) {
       console.error('Failed to save email:', err);
-      setError('Failed to save email. Please try again.');
+      setError(t('error_save_email_failed'));
       trackEvent('trial_email_layer1_error', {
         error: err instanceof Error ? err.message : 'unknown_error'
       });
@@ -91,12 +93,11 @@ const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialSt
           <Favorite sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
 
           <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-            We're Here for {petName}
+            {t('layer1_title', { petName })}
           </Typography>
 
           <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary', lineHeight: 1.6 }}>
-            During this 7-day trial, you'll track many important moments. If something goes wrong -
-            phone dies, browser clears - we want to make sure you don't lose your progress.
+            {t('layer1_body')}
           </Typography>
 
           {error && (
@@ -107,7 +108,7 @@ const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialSt
 
           <TextField
             fullWidth
-            label="Email address"
+            label={t('email_address_label')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -117,7 +118,7 @@ const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialSt
           />
 
           <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary', fontSize: '0.875rem' }}>
-            We'll send one helpful check-in during your trial. Nothing spammy.
+            {t('layer1_hint')}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
@@ -128,7 +129,7 @@ const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialSt
               disabled={submitting}
               sx={{ minWidth: 120 }}
             >
-              Skip for now
+              {t('skip_for_now')}
             </Button>
             <Button
               variant="contained"
@@ -137,7 +138,7 @@ const TrialStartEmailModal = ({ open, onClose, onEmailSubmit, petName }: TrialSt
               disabled={submitting}
               sx={{ minWidth: 120 }}
             >
-              {submitting ? <CircularProgress size={24} /> : 'Add Email'}
+              {submitting ? <CircularProgress size={24} /> : t('add_email')}
             </Button>
           </Box>
         </Box>

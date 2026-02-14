@@ -19,6 +19,7 @@ import {
 import { PhotoCamera, Pets } from '@mui/icons-material';
 import { updatePet, deletePet, type UpdatePetRequest, type Pet } from '../services/petService';
 import { processImage } from '../utils/imageUtils';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface EditPetDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ interface EditPetDialogProps {
 }
 
 const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditPetDialogProps) => {
+  const { t } = useLanguage();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState({
@@ -74,7 +76,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
     }
 
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
+      setError(t('error_image_type'));
       return;
     }
 
@@ -88,7 +90,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
       setError(null);
     } catch (err) {
       console.error('Failed to process image:', err);
-      setError('Failed to process image. Please try a different image.');
+      setError(t('error_image_process'));
     }
   };
 
@@ -98,7 +100,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
     }
 
     if (!formData.name.trim()) {
-      setError('Pet name is required');
+      setError(t('error_pet_name_required'));
       return;
     }
 
@@ -124,7 +126,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
       onClose();
     } catch (err) {
       console.error('Failed to update pet:', err);
-      setError('Failed to update pet. Please try again.');
+      setError(t('error_update_pet'));
     } finally {
       setSaving(false);
     }
@@ -153,7 +155,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
       onClose();
     } catch (err) {
       console.error('Failed to delete pet:', err);
-      setError('Failed to delete pet. Please try again.');
+      setError(t('error_delete_pet'));
     } finally {
       setDeleting(false);
     }
@@ -171,10 +173,10 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
         <DialogTitle>
           <Typography variant="h5" component="div" sx={{ fontWeight: 600 }}>
-            {pet?.name}'s Profile
+            {t('pet_profile_title', { petName: pet?.name || '' })}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Update your companion's information
+            {t('update_companion_info')}
           </Typography>
         </DialogTitle>
         <DialogContent>
@@ -216,7 +218,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
                 startIcon={<PhotoCamera />}
                 disabled={saving}
               >
-                {photoFileName ? 'Change Photo' : 'Add Photo'}
+                {photoFileName ? t('change_photo') : t('add_photo')}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -229,7 +231,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
 
             {/* Form Fields */}
             <TextField
-              label="Pet Name"
+              label={t('pet_name_label')}
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               required
@@ -237,15 +239,15 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
               disabled={saving}
             />
             <TextField
-              label="Breed"
+              label={t('breed_label')}
               value={formData.breed}
               onChange={(e) => handleChange('breed', e.target.value)}
               fullWidth
               disabled={saving}
-              placeholder="e.g., Golden Retriever"
+              placeholder={t('breed_placeholder')}
             />
             <TextField
-              label="Age (years)"
+              label={t('age_years_label')}
               type="number"
               value={formData.age}
               onChange={(e) => handleChange('age', e.target.value)}
@@ -255,7 +257,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
             />
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
               <TextField
-                label="Weight"
+                label={t('weight_label')}
                 placeholder={formData.weightUnit === 'lbs' ? 'e.g., 12' : 'e.g., 5.5'}
                 type="number"
                 value={formData.weight}
@@ -293,11 +295,11 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
             variant="outlined"
             sx={{ order: { xs: 3, sm: 1 }, width: { xs: '100%', sm: 'auto' } }}
           >
-            Remove Pet
+            {t('remove_pet')}
           </Button>
           <Box sx={{ display: 'flex', gap: 1, order: { xs: 1, sm: 2 }, width: { xs: '100%', sm: 'auto' } }}>
             <Button onClick={handleClose} disabled={saving || deleting} sx={{ flex: { xs: 1, sm: 'none' } }}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               onClick={handleSubmit}
@@ -306,7 +308,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
               size="large"
               sx={{ flex: { xs: 1, sm: 'none' } }}
             >
-              {saving ? <CircularProgress size={24} /> : 'Save Changes'}
+              {saving ? <CircularProgress size={24} /> : t('save_changes')}
             </Button>
           </Box>
         </DialogActions>
@@ -321,13 +323,12 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
       >
         <DialogTitle>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            Remove {pet?.name}?
+            {t('remove_pet_confirm', { petName: pet?.name || '' })}
           </Typography>
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
-            This will permanently remove {pet?.name} and all associated journal entries.
-            This action cannot be undone.
+            {t('remove_pet_warning', { petName: pet?.name || '' })}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -335,7 +336,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
             onClick={() => setDeleteConfirmOpen(false)}
             disabled={deleting}
           >
-            Cancel
+            {t('cancel')}
           </Button>
           <Button
             onClick={handleDeleteConfirm}
@@ -343,7 +344,7 @@ const EditPetDialog = ({ open, onClose, pet, onPetUpdated, onPetDeleted }: EditP
             variant="contained"
             disabled={deleting}
           >
-            {deleting ? <CircularProgress size={24} /> : 'Remove Pet'}
+            {deleting ? <CircularProgress size={24} /> : t('remove_pet')}
           </Button>
         </DialogActions>
       </Dialog>

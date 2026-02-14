@@ -7,7 +7,9 @@ using QuestPDF.Infrastructure;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using System.Globalization;
 using System.Text.Json;
+using EverPal.WebApi.Localization;
 
 namespace EverPal.WebApi.Services
 {
@@ -52,6 +54,8 @@ namespace EverPal.WebApi.Services
 
             var healthLogs = await GetHealthLogsForExportAsync(request.PetId, request.StartDate, request.EndDate);
 
+            var lang = request.Language ?? "en";
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>
@@ -60,9 +64,9 @@ namespace EverPal.WebApi.Services
                     page.Margin(40);
                     page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial"));
 
-                    page.Header().Element(c => ComposeHeader(c, pet));
-                    page.Content().Element(c => ComposeContent(c, pet, healthLogs, request.IncludePhotos));
-                    page.Footer().Element(c => ComposeFooter(c, pet));
+                    page.Header().Element(c => ComposeHeader(c, pet, lang));
+                    page.Content().Element(c => ComposeContent(c, pet, healthLogs, request.IncludePhotos, lang));
+                    page.Footer().Element(c => ComposeFooter(c, pet, lang));
                 });
             });
 
@@ -111,7 +115,7 @@ namespace EverPal.WebApi.Services
             return healthLogs;
         }
 
-        private void ComposeHeader(IContainer container, Pet pet)
+        private void ComposeHeader(IContainer container, Pet pet, string lang)
         {
             container.Column(column =>
             {
@@ -119,12 +123,12 @@ namespace EverPal.WebApi.Services
                 {
                     row.RelativeItem().Column(col =>
                     {
-                        col.Item().Text($"{pet.Name}'s Health Report")
+                        col.Item().Text(string.Format(PdfStrings.Get(lang, "health_report_title"), pet.Name))
                             .FontSize(24)
                             .Bold()
                             .FontColor(Colors.Blue.Darken2);
 
-                        col.Item().PaddingTop(5).Text("Pet Health Tracking Report")
+                        col.Item().PaddingTop(5).Text(PdfStrings.Get(lang, "health_report_subtitle"))
                             .FontSize(12)
                             .FontColor(Colors.Grey.Darken1);
                     });
@@ -150,27 +154,29 @@ namespace EverPal.WebApi.Services
             });
         }
 
-        private void ComposeContent(IContainer container, Pet pet, List<HealthLog> healthLogs, bool includePhotos)
+        private void ComposeContent(IContainer container, Pet pet, List<HealthLog> healthLogs, bool includePhotos, string lang)
         {
             container.Column(column =>
             {
-                column.Item().PaddingBottom(15).Element(c => ComposePetProfile(c, pet, healthLogs));
-                column.Item().PaddingBottom(10).Element(c => ComposeDisclaimer(c));
-                column.Item().Element(c => ComposeHealthTimeline(c, healthLogs, includePhotos));
+                column.Item().PaddingBottom(15).Element(c => ComposePetProfile(c, pet, healthLogs, lang));
+                column.Item().PaddingBottom(10).Element(c => ComposeDisclaimer(c, lang));
+                column.Item().Element(c => ComposeHealthTimeline(c, healthLogs, includePhotos, lang));
             });
         }
 
-        private void ComposePetProfile(IContainer container, Pet pet, List<HealthLog> healthLogs)
+        private void ComposePetProfile(IContainer container, Pet pet, List<HealthLog> healthLogs, string lang)
         {
+            var culture = new CultureInfo(lang == "pl" ? "pl-PL" : "en-US");
+
             container.Column(column =>
             {
-                column.Item().Text("Pet Profile").FontSize(16).Bold().FontColor(Colors.Blue.Darken1);
+                column.Item().Text(PdfStrings.Get(lang, "pet_profile")).FontSize(16).Bold().FontColor(Colors.Blue.Darken1);
 
                 column.Item().PaddingTop(10).PaddingBottom(10).Background(Colors.Grey.Lighten3).Padding(15).Column(col =>
                 {
                     col.Item().Row(row =>
                     {
-                        row.ConstantItem(120).Text("Name:").SemiBold();
+                        row.ConstantItem(150).Text(PdfStrings.Get(lang, "name")).SemiBold();
                         row.RelativeItem().Text(pet.Name);
                     });
 
@@ -178,7 +184,7 @@ namespace EverPal.WebApi.Services
                     {
                         col.Item().PaddingTop(5).Row(row =>
                         {
-                            row.ConstantItem(120).Text("Breed:").SemiBold();
+                            row.ConstantItem(150).Text(PdfStrings.Get(lang, "breed")).SemiBold();
                             row.RelativeItem().Text(pet.Breed);
                         });
                     }
@@ -187,8 +193,8 @@ namespace EverPal.WebApi.Services
                     {
                         col.Item().PaddingTop(5).Row(row =>
                         {
-                            row.ConstantItem(120).Text("Age:").SemiBold();
-                            row.RelativeItem().Text($"{pet.Age} years");
+                            row.ConstantItem(150).Text(PdfStrings.Get(lang, "age")).SemiBold();
+                            row.RelativeItem().Text(string.Format(PdfStrings.Get(lang, "age_years"), pet.Age));
                         });
                     }
 
@@ -196,60 +202,57 @@ namespace EverPal.WebApi.Services
                     {
                         col.Item().PaddingTop(5).Row(row =>
                         {
-                            row.ConstantItem(120).Text("Weight:").SemiBold();
-                            row.RelativeItem().Text($"{pet.Weight} {pet.WeightUnit ?? "lbs"}");
+                            row.ConstantItem(150).Text(PdfStrings.Get(lang, "weight")).SemiBold();
+                            row.RelativeItem().Text($"{pet.Weight} {pet.WeightUnit ?? "kg"}");
                         });
                     }
 
                     col.Item().PaddingTop(5).Row(row =>
                     {
-                        row.ConstantItem(120).Text("Report Period:").SemiBold();
+                        row.ConstantItem(150).Text(PdfStrings.Get(lang, "report_period")).SemiBold();
                         row.RelativeItem().Text(healthLogs.Any()
-                            ? $"{healthLogs.Last().LoggedAt:MMM d, yyyy} - {healthLogs.First().LoggedAt:MMM d, yyyy}"
-                            : "No entries");
+                            ? $"{healthLogs.Last().LoggedAt.ToString("d MMM yyyy", culture)} - {healthLogs.First().LoggedAt.ToString("d MMM yyyy", culture)}"
+                            : PdfStrings.Get(lang, "no_entries"));
                     });
 
                     col.Item().PaddingTop(5).Row(row =>
                     {
-                        row.ConstantItem(120).Text("Total Entries:").SemiBold();
+                        row.ConstantItem(150).Text(PdfStrings.Get(lang, "total_entries")).SemiBold();
                         row.RelativeItem().Text(healthLogs.Count.ToString());
                     });
 
                     col.Item().PaddingTop(5).Row(row =>
                     {
-                        row.ConstantItem(120).Text("Generated:").SemiBold();
-                        row.RelativeItem().Text(DateTime.UtcNow.ToString("MMM d, yyyy 'at' h:mm tt 'UTC'"));
+                        row.ConstantItem(150).Text(PdfStrings.Get(lang, "generated")).SemiBold();
+                        row.RelativeItem().Text(DateTime.UtcNow.ToString("d MMM yyyy, HH:mm 'UTC'", culture));
                     });
                 });
             });
         }
 
-        private void ComposeDisclaimer(IContainer container)
+        private void ComposeDisclaimer(IContainer container, string lang)
         {
             container.Background(Colors.Yellow.Lighten3).Padding(10).Column(column =>
             {
-                column.Item().Text("Medical Disclaimer").FontSize(10).Bold();
-                column.Item().PaddingTop(5).Text(
-                    "This document contains health observations recorded by the pet owner. It is NOT a veterinary medical record or diagnosis. " +
-                    "Please consult with a licensed veterinarian for medical advice regarding your pet's health."
-                ).FontSize(9).Italic();
+                column.Item().Text(PdfStrings.Get(lang, "medical_disclaimer_title")).FontSize(10).Bold();
+                column.Item().PaddingTop(5).Text(PdfStrings.Get(lang, "medical_disclaimer_text")).FontSize(9).Italic();
             });
         }
 
-        private void ComposeHealthTimeline(IContainer container, List<HealthLog> healthLogs, bool includePhotos)
+        private void ComposeHealthTimeline(IContainer container, List<HealthLog> healthLogs, bool includePhotos, string lang)
         {
             var photoCount = 0;
 
             container.Column(column =>
             {
-                column.Item().PaddingTop(15).PaddingBottom(10).Text("Health Timeline")
+                column.Item().PaddingTop(15).PaddingBottom(10).Text(PdfStrings.Get(lang, "health_timeline"))
                     .FontSize(16)
                     .Bold()
                     .FontColor(Colors.Blue.Darken1);
 
                 if (!healthLogs.Any())
                 {
-                    column.Item().Text("No health entries found for this period.").Italic().FontColor(Colors.Grey.Darken1);
+                    column.Item().Text(PdfStrings.Get(lang, "no_health_entries")).Italic().FontColor(Colors.Grey.Darken1);
                     return;
                 }
 
@@ -258,7 +261,7 @@ namespace EverPal.WebApi.Services
                     var currentPhotoCount = photoCount;
                     var hasPhoto = includePhotos && !string.IsNullOrEmpty(log.PhotoBase64) && currentPhotoCount < MaxPhotos;
 
-                    column.Item().PaddingBottom(15).Element(c => ComposeHealthLogEntry(c, log, hasPhoto));
+                    column.Item().PaddingBottom(15).Element(c => ComposeHealthLogEntry(c, log, hasPhoto, lang));
 
                     if (hasPhoto)
                     {
@@ -268,8 +271,10 @@ namespace EverPal.WebApi.Services
             });
         }
 
-        private void ComposeHealthLogEntry(IContainer container, HealthLog log, bool includePhoto)
+        private void ComposeHealthLogEntry(IContainer container, HealthLog log, bool includePhoto, string lang)
         {
+            var culture = new CultureInfo(lang == "pl" ? "pl-PL" : "en-US");
+
             container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingBottom(10).Column(column =>
             {
                 column.Item().Row(row =>
@@ -278,12 +283,12 @@ namespace EverPal.WebApi.Services
                     {
                         col.Item().Row(r =>
                         {
-                            r.AutoItem().Text(log.LoggedAt.ToString("MMM d, yyyy h:mm tt"))
+                            r.AutoItem().Text(log.LoggedAt.ToString("d MMM yyyy, HH:mm", culture))
                                 .FontSize(11)
                                 .SemiBold()
                                 .FontColor(Colors.Blue.Darken2);
 
-                            r.AutoItem().PaddingLeft(10).Text($"[{FormatLogType(log.LogType)}]")
+                            r.AutoItem().PaddingLeft(10).Text($"[{FormatLogType(log.LogType, lang)}]")
                                 .FontSize(10)
                                 .FontColor(GetLogTypeColor(log.LogType));
                         });
@@ -292,8 +297,8 @@ namespace EverPal.WebApi.Services
                         {
                             col.Item().PaddingTop(5).Row(r =>
                             {
-                                r.AutoItem().Text("Tags: ").FontSize(9).FontColor(Colors.Grey.Darken1);
-                                r.AutoItem().Text(string.Join(", ", log.Tags.Select(t => t.Label)))
+                                r.AutoItem().Text(PdfStrings.Get(lang, "tags")).FontSize(9).FontColor(Colors.Grey.Darken1);
+                                r.AutoItem().Text(string.Join(", ", log.Tags.Select(t => TagTranslations.Get(lang, t.Label))))
                                     .FontSize(9)
                                     .FontColor(Colors.Grey.Darken2);
                             });
@@ -323,7 +328,7 @@ namespace EverPal.WebApi.Services
             });
         }
 
-        private void ComposeFooter(IContainer container, Pet pet)
+        private void ComposeFooter(IContainer container, Pet pet, string lang)
         {
             container.AlignCenter().Column(column =>
             {
@@ -332,15 +337,15 @@ namespace EverPal.WebApi.Services
                 {
                     row.RelativeItem().AlignLeft().Text(text =>
                     {
-                        text.Span("Page ");
+                        text.Span(PdfStrings.Get(lang, "page"));
                         text.CurrentPageNumber();
-                        text.Span(" of ");
+                        text.Span(PdfStrings.Get(lang, "of"));
                         text.TotalPages();
                     });
 
-                    row.RelativeItem().AlignCenter().Text($"{pet.Name}'s Health Report");
+                    row.RelativeItem().AlignCenter().Text(string.Format(PdfStrings.Get(lang, "health_report_title"), pet.Name));
 
-                    row.RelativeItem().AlignRight().Text("Generated by EverPal");
+                    row.RelativeItem().AlignRight().Text(PdfStrings.Get(lang, "generated_by"));
                 });
             });
         }
@@ -364,18 +369,23 @@ namespace EverPal.WebApi.Services
             return outputStream.ToArray();
         }
 
-        private string FormatLogType(string logType)
+        private string FormatLogType(string logType, string lang)
         {
-            return logType switch
+            var key = logType switch
             {
-                "symptom" => "Symptom",
-                "food" => "Food",
-                "medication" => "Medication",
-                "vet_visit" => "Vet Visit",
-                "weight" => "Weight",
-                "general" => "General",
-                _ => logType
+                "symptom" => "log_type_symptom",
+                "food" => "log_type_food",
+                "medication" => "log_type_medication",
+                "vet_visit" => "log_type_vet_visit",
+                "weight" => "log_type_weight",
+                "general" => "log_type_general",
+                "stool" => "log_type_stool",
+                "urine" => "log_type_urine",
+                "vomit" => "log_type_vomit",
+                _ => null
             };
+
+            return key != null ? PdfStrings.Get(lang, key) : logType;
         }
 
         private string GetLogTypeColor(string logType)

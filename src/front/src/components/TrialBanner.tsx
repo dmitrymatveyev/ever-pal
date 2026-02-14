@@ -13,8 +13,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { STRIPE_PAYMENT_LINK, LIFETIME_PRICE } from '../config/stripe';
 import { updateUserEmail } from '../services/userService';
 import { trackEvent } from '../utils/analytics';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const TrialBanner = () => {
+  const { t } = useLanguage();
   const { trialStatus, hasEngaged, user } = useAuth();
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [email, setEmail] = useState('');
@@ -62,13 +64,13 @@ const TrialBanner = () => {
 
   const handleEmailSubmit = async () => {
     if (!email.trim()) {
-      setError('Please enter an email address');
+      setError(t('error_email_required'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+      setError(t('error_email_invalid'));
       return;
     }
 
@@ -95,7 +97,7 @@ const TrialBanner = () => {
       setEmail('');
     } catch (err) {
       console.error('Failed to save email:', err);
-      setError('Failed to save email. Please try again.');
+      setError(t('error_save_email_failed'));
       trackEvent('trial_email_layer3_error', {
         error: err instanceof Error ? err.message : 'unknown_error'
       });
@@ -134,22 +136,22 @@ const TrialBanner = () => {
       >
         <Box>
           <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
-            Your 7-day trial ends in {daysLeft} day{daysLeft === 1 ? '' : 's'}
+            {t('trial_ends_title', { days: daysLeft, plural: daysLeft === 1 ? '' : 's' })}
           </Typography>
 
           <Typography variant="body2" sx={{ mb: 1.5, color: 'text.secondary' }}>
-            Without an email backup:
+            {t('trial_without_email')}
           </Typography>
 
           <Box component="ul" sx={{ m: 0, pl: 2.5, mb: 2 }}>
             <li>
-              <Typography variant="body2">Data could be lost if you clear your browser</Typography>
+              <Typography variant="body2">{t('trial_data_loss')}</Typography>
             </li>
             <li>
-              <Typography variant="body2">Can't access from another device</Typography>
+              <Typography variant="body2">{t('trial_no_other_device')}</Typography>
             </li>
             <li>
-              <Typography variant="body2">No backup if your phone breaks</Typography>
+              <Typography variant="body2">{t('trial_no_backup')}</Typography>
             </li>
           </Box>
 
@@ -166,7 +168,7 @@ const TrialBanner = () => {
               }}
               sx={{ fontWeight: 600 }}
             >
-              Add Email Now
+              {t('add_email_now')}
             </Button>
             <Button
               variant="contained"
@@ -174,7 +176,7 @@ const TrialBanner = () => {
               onClick={handleUpgrade}
               sx={{ fontWeight: 600 }}
             >
-              View Payment Plan
+              {t('view_payment_plan')}
             </Button>
           </Box>
         </Box>
@@ -198,7 +200,7 @@ const TrialBanner = () => {
       >
         <Box sx={{ width: '100%' }}>
           <Typography variant="body2" sx={{ fontWeight: 700, mb: 2 }}>
-            Protect your pet's health data
+            {t('protect_data')}
           </Typography>
 
           <Collapse in={error !== null}>
@@ -225,7 +227,7 @@ const TrialBanner = () => {
               disabled={submitting}
               sx={{ minWidth: 100 }}
             >
-              {submitting ? <CircularProgress size={20} /> : 'Add Email'}
+              {submitting ? <CircularProgress size={20} /> : t('add_email')}
             </Button>
           </Box>
 
@@ -236,7 +238,7 @@ const TrialBanner = () => {
               onClick={handleUpgrade}
               disabled={submitting}
             >
-              View Payment Plan
+              {t('view_payment_plan')}
             </Button>
             <Button
               variant="text"
@@ -244,7 +246,7 @@ const TrialBanner = () => {
               onClick={handleMaybeLater}
               disabled={submitting}
             >
-              Maybe Later
+              {t('maybe_later')}
             </Button>
           </Box>
         </Box>
@@ -259,15 +261,15 @@ const TrialBanner = () => {
       sx={{ mb: 2 }}
       action={
         <Button color="inherit" size="small" onClick={handleUpgrade}>
-          Upgrade
+          {t('upgrade')}
         </Button>
       }
     >
       <Box>
         <strong>
-          Trial: {daysLeft} day{daysLeft === 1 ? '' : 's'} left
+          {t('trial_days_left', { days: daysLeft, plural: daysLeft === 1 ? '' : 's' })}
         </strong>
-        {' '}- Keep unlimited PDF exports and symptom tracking: ${LIFETIME_PRICE} lifetime
+        {' '}- {t('trial_upgrade_message', { price: `$${LIFETIME_PRICE}` })}
       </Box>
     </Alert>
   );

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@mui/material';
 import { PictureAsPdf } from '@mui/icons-material';
 import ExportVetPDFDialog from './ExportVetPDFDialog';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface PDFExportButtonProps {
   petId: string;
@@ -19,6 +20,7 @@ const PDFExportButton = ({
   fullWidth = false,
 }: PDFExportButtonProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <>
@@ -29,7 +31,7 @@ const PDFExportButton = ({
         startIcon={<PictureAsPdf />}
         onClick={() => setDialogOpen(true)}
       >
-        Share with Vet
+        {t('share_with_vet')}
       </Button>
       <ExportVetPDFDialog
         open={dialogOpen}

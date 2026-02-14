@@ -6,5 +6,6 @@ namespace EverPal.WebApi.Models
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool IncludePhotos { get; set; } = true;
+        public string Language { get; set; } = "en";
     }
 }

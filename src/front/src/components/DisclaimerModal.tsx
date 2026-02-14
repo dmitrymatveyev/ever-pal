@@ -13,6 +13,7 @@ import {
 import WarningIcon from '@mui/icons-material/Warning';
 import { acknowledgeDisclaimer } from '../services/trialService';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface DisclaimerModalProps {
   open: boolean;
@@ -21,6 +22,7 @@ interface DisclaimerModalProps {
 
 const DisclaimerModal = ({ open, onClose }: DisclaimerModalProps) => {
   const { user, refetchTrialStatus } = useAuth();
+  const { t } = useLanguage();
   const [acknowledged, setAcknowledged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -36,7 +38,7 @@ const DisclaimerModal = ({ open, onClose }: DisclaimerModalProps) => {
       onClose();
     } catch (error) {
       console.error('Failed to acknowledge disclaimer:', error);
-      alert('Failed to save. Please try again.');
+      alert(t('disclaimer_save_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -47,35 +49,33 @@ const DisclaimerModal = ({ open, onClose }: DisclaimerModalProps) => {
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <WarningIcon color="warning" />
-          Important Medical Disclaimer
+          {t('disclaimer_title')}
         </Box>
       </DialogTitle>
       <DialogContent>
         <Typography variant="body1" paragraph>
-          <strong>EverPal is an observation tool, not a veterinary service.</strong>
+          <strong>{t('disclaimer_observation_tool')}</strong>
         </Typography>
         <Typography variant="body2" paragraph>
-          This app helps you track and organize your pet's health information. It does not
-          diagnose, treat, or provide medical recommendations.
+          {t('disclaimer_body')}
         </Typography>
         <Typography variant="body2" paragraph>
-          <strong>Always consult your veterinarian for medical advice.</strong>
+          <strong>{t('disclaimer_consult_vet')}</strong>
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
-          We do not provide medical guidance, and any patterns or observations shown in this app
-          should be discussed with a qualified veterinarian.
+          {t('disclaimer_no_guidance')}
         </Typography>
 
         <FormControlLabel
           control={
             <Checkbox checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} />
           }
-          label="I understand that EverPal is not a substitute for professional veterinary care"
+          label={t('disclaimer_checkbox')}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={handleAccept} variant="contained" disabled={!acknowledged || submitting}>
-          I Understand
+          {t('disclaimer_accept')}
         </Button>
       </DialogActions>
     </Dialog>
