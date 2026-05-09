@@ -20,7 +20,7 @@ import {
   Snackbar,
   Menu
 } from '@mui/material';
-import { Add, Pets, Edit, Delete, Settings, CameraAlt, AccountCircle, ContentCopy, MoreVert } from '@mui/icons-material';
+import { Add, Pets, Edit, Delete, Settings, CameraAlt, AccountCircle, ContentCopy, MoreVert, Language as LanguageIcon } from '@mui/icons-material';
 import { getPets, type Pet } from '../services/petService';
 import { getHealthLogs, deleteHealthLog, type HealthLog } from '../services/healthLogService';
 import AddPetDialog from '../components/AddPetDialog';
@@ -48,7 +48,7 @@ const HealthJournal = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { markEngaged, user, logout, convertToEmail } = useAuth();
-  const { t, translateTag, language } = useLanguage();
+  const { t, translateTag, language, setLanguage } = useLanguage();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>('');
@@ -66,6 +66,7 @@ const HealthJournal = () => {
   const [emailSetupOpen, setEmailSetupOpen] = useState(false);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ element: HTMLElement; logId: string } | null>(null);
   const [showLayer2Banner, setShowLayer2Banner] = useState(false);
+  const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
 
   // Dialog states derived from URL params
   const dialog = searchParams.get('dialog');
@@ -564,6 +565,19 @@ const HealthJournal = () => {
             }}
           >
             <IconButton
+              onClick={(e) => setLangAnchorEl(e.currentTarget)}
+              aria-label="Select language"
+              size="small"
+              sx={{
+                bgcolor: 'background.paper',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <LanguageIcon fontSize="small" />
+            </IconButton>
+            <IconButton
               onClick={handleAccountMenuOpen}
               aria-label="account menu"
               size="small"
@@ -1007,6 +1021,32 @@ const HealthJournal = () => {
           anonymousToken={user.token}
         />
       )}
+
+      {/* Language Menu */}
+      <Menu
+        anchorEl={langAnchorEl}
+        open={Boolean(langAnchorEl)}
+        onClose={() => setLangAnchorEl(null)}
+      >
+        <MenuItem
+          selected={language === 'en'}
+          onClick={() => {
+            setLanguage('en');
+            setLangAnchorEl(null);
+          }}
+        >
+          English
+        </MenuItem>
+        <MenuItem
+          selected={language === 'pl'}
+          onClick={() => {
+            setLanguage('pl');
+            setLangAnchorEl(null);
+          }}
+        >
+          Polski
+        </MenuItem>
+      </Menu>
 
       {/* Action Menu */}
       <Menu

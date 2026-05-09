@@ -16,8 +16,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Menu,
+  MenuItem,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Language as LanguageIcon } from '@mui/icons-material';
 import { login, forgotPassword, resendVerification } from '../services/emailAuthService';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -36,6 +38,7 @@ const SignIn = () => {
   const [sessionExpiryMessage, setSessionExpiryMessage] = useState<string | null>(null);
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     const message = localStorage.getItem('sessionExpiryMessage');
@@ -151,7 +154,16 @@ const SignIn = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4 }}>
+    <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4, position: 'relative' }}>
+      <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+        <IconButton onClick={(e) => setLangAnchorEl(e.currentTarget)} size="small" aria-label="Select language">
+          <LanguageIcon />
+        </IconButton>
+        <Menu anchorEl={langAnchorEl} open={Boolean(langAnchorEl)} onClose={() => setLangAnchorEl(null)}>
+          <MenuItem selected={language === 'en'} onClick={() => { setLanguage('en'); setLangAnchorEl(null); }}>English</MenuItem>
+          <MenuItem selected={language === 'pl'} onClick={() => { setLanguage('pl'); setLangAnchorEl(null); }}>Polski</MenuItem>
+        </Menu>
+      </Box>
       <Paper sx={{ p: 4 }}>
         <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, textAlign: 'center' }}>
           {t('sign_in')}
@@ -290,17 +302,6 @@ const SignIn = () => {
             sx={{ textDecoration: 'none', fontWeight: 600 }}
           >
             {t('start_free_trial')}
-          </Link>
-        </Box>
-
-        <Box sx={{ textAlign: 'center', mt: 3 }}>
-          <Link
-            component="button"
-            variant="body2"
-            onClick={() => setLanguage(language === 'en' ? 'pl' : 'en')}
-            sx={{ textDecoration: 'none', color: 'text.secondary' }}
-          >
-            {language === 'en' ? 'Polski' : 'English'}
           </Link>
         </Box>
       </Paper>

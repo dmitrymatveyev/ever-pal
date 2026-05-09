@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { Snackbar } from '@mui/material';
 import { en } from './translations/en';
 import { pl } from './translations/pl';
 import { tagTranslations } from './tagTranslations';
@@ -42,10 +43,16 @@ const interpolate = (template: string, params?: Record<string, string | number>)
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguageState] = useState<Language>(detectLanguage);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem(STORAGE_KEY, lang);
+    if (lang !== language) {
+      setLanguageState(lang);
+      localStorage.setItem(STORAGE_KEY, lang);
+      setSnackbarMessage(lang === 'pl' ? 'Język zmieniony na Polski' : 'Language changed to English');
+      setSnackbarOpen(true);
+    }
   };
 
   const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
@@ -68,6 +75,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, translateTag }}>
       {children}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={2000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </LanguageContext.Provider>
   );
 };

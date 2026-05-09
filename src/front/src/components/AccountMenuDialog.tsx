@@ -118,7 +118,7 @@ const AccountMenuDialog = ({
             <ListItemIcon>
               <LanguageIcon />
             </ListItemIcon>
-            <ListItemText primary={t('language_label')} />
+            <ListItemText primary={language === 'en' ? 'Zmień na Polski' : 'Change to English'} />
           </ListItemButton>
 
           <ListItemButton onClick={handleContactSupport} sx={{ borderRadius: 2 }}>

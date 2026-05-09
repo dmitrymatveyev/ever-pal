@@ -7,8 +7,8 @@ using QuestPDF.Infrastructure;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
-using System.Globalization;
 using System.Text.Json;
+using System.Globalization;
 using EverPal.WebApi.Localization;
 
 namespace EverPal.WebApi.Services
@@ -224,7 +224,7 @@ namespace EverPal.WebApi.Services
                     col.Item().PaddingTop(5).Row(row =>
                     {
                         row.ConstantItem(150).Text(PdfStrings.Get(lang, "generated")).SemiBold();
-                        row.RelativeItem().Text(DateTime.UtcNow.ToString("d MMM yyyy, HH:mm 'UTC'", culture));
+                        row.RelativeItem().Text(DateTime.UtcNow.ToString("d MMM yyyy, HH:mm", culture) + " UTC");
                     });
                 });
             });
@@ -241,6 +241,7 @@ namespace EverPal.WebApi.Services
 
         private void ComposeHealthTimeline(IContainer container, List<HealthLog> healthLogs, bool includePhotos, string lang)
         {
+            var culture = new CultureInfo(lang == "pl" ? "pl-PL" : "en-US");
             var photoCount = 0;
 
             container.Column(column =>
@@ -261,7 +262,7 @@ namespace EverPal.WebApi.Services
                     var currentPhotoCount = photoCount;
                     var hasPhoto = includePhotos && !string.IsNullOrEmpty(log.PhotoBase64) && currentPhotoCount < MaxPhotos;
 
-                    column.Item().PaddingBottom(15).Element(c => ComposeHealthLogEntry(c, log, hasPhoto, lang));
+                    column.Item().PaddingBottom(15).Element(c => ComposeHealthLogEntry(c, log, hasPhoto, lang, culture));
 
                     if (hasPhoto)
                     {
@@ -271,10 +272,8 @@ namespace EverPal.WebApi.Services
             });
         }
 
-        private void ComposeHealthLogEntry(IContainer container, HealthLog log, bool includePhoto, string lang)
+        private void ComposeHealthLogEntry(IContainer container, HealthLog log, bool includePhoto, string lang, CultureInfo culture)
         {
-            var culture = new CultureInfo(lang == "pl" ? "pl-PL" : "en-US");
-
             container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingBottom(10).Column(column =>
             {
                 column.Item().Row(row =>
